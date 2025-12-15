@@ -7,16 +7,22 @@ import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.factory.PasswordEncoderFactories;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.provisioning.InMemoryUserDetailsManager;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+
+import cl.cecinasllanquihue.gestor_precios.model.Usuario;
+import cl.cecinasllanquihue.gestor_precios.repository.UsuarioRepository;
 
 @Configuration
 @EnableWebSecurity
@@ -53,18 +59,20 @@ public class SecurityConfig {
 
     @Bean
     PasswordEncoder passwordEncoder() {
-        return new BCryptPasswordEncoder();
+        return PasswordEncoderFactories.createDelegatingPasswordEncoder();
     }
 
     @Bean
-    public UserDetailsService userDetailsService() {
-        UserDetails user = User
-                .withUsername("frontend")
-                .password(passwordEncoder().encode("1234"))
-                .roles("USER")
-                .build();
+    public UserDetailsService userDetailsService(UsuarioRepository usuarioRepository) {
+        return username -> {
+            Usuario usuario = usuarioRepository.findByNombre(username).orElseThrow(() -> new UsernameNotFoundException("Usuario no encontrado"));
 
-        return new InMemoryUserDetailsManager(user);
-    }
+            return new org.springframework.security.core.userdetails.User(
+                    usuario.getNombre(),
+                    usuario.getContrasena(),
+                    java.util.List.of(new SimpleGrantedAuthority("ROLE_USER"))
+            );
+        };
+    };
 }
 
