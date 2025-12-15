@@ -67,9 +67,14 @@ public class SecurityConfig {
         return username -> {
             Usuario usuario = usuarioRepository.findByNombre(username).orElseThrow(() -> new UsernameNotFoundException("Usuario no encontrado"));
 
+            String pwd = usuario.getContrasena();
+            if (pwd == null || !pwd.startsWith("{bcrypt}")) {
+                throw new UsernameNotFoundException("Usuario no habilitado para login (password no migrada a bcrypt)");
+            }
+
             return new org.springframework.security.core.userdetails.User(
                     usuario.getNombre(),
-                    usuario.getContrasena(),
+                    pwd,
                     java.util.List.of(new SimpleGrantedAuthority("ROLE_USER"))
             );
         };
