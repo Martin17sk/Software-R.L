@@ -1,16 +1,29 @@
-# Node / Frontend
-frontend/node_modules
-frontend/dist
+# =====================
+# IDEs / Editors
+# =====================
+.idea/
+*.iml
+.vscode/
+*.classpath
+*.project
+*.settings/
+
+# =====================
+# Frontend (Node / Vue)
+# =====================
+node_modules/
+dist/
+.env
 frontend/.env
 
-# Java / Backend
-backend/target
-backend/.classpath
-backend/.project
-backend/.settings
-backend/.idea
-backend/*.iml
+# =====================
+# Backend (Java / Maven)
+# =====================
+target/
+**/target/
 
-# General
-.env
+# =====================
+# OS
+# =====================
 .DS_Store
+Thumbs.db
