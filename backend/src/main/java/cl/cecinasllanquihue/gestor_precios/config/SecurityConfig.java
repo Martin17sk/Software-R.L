@@ -72,6 +72,10 @@ public class SecurityConfig {
                 throw new UsernameNotFoundException("Usuario no habilitado para login (password no migrada a bcrypt)");
             }
 
+            if (!usuario.isActivo()) {
+                throw new UsernameNotFoundException("Usuario deshabilitado");
+            }
+
             return new org.springframework.security.core.userdetails.User(
                     usuario.getNombre(),
                     pwd,
