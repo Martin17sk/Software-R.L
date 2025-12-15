@@ -23,7 +23,7 @@ export function useAuth() {
       await router.push('/pricing/register')
     } catch (err) {
       clearAuthToken()
-      errorMessage.value = 'Credenciales inválidas'
+      errorMessage.value = err?.message || 'Error al inicar sesión'
     } finally {
       loading.value = false
     }

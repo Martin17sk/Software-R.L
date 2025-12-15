@@ -1,32 +1,63 @@
-import axios from 'axios'
-import { ref } from 'vue'
+import { ref } from "vue";
 
-//const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080/api'
-const http = axios.create({
-  baseURL: 'http://localhost:5173',
-  withCredentials: true,
-})
+const baseURL = import.meta.env.VITE_API_BASE_URL;
+const authToken = ref(localStorage.getItem("authToken"));
 
 export function useHttpClient() {
   function setAuthToken(token) {
-    localStorage.setItem('authToken', token)
-    http.defaults.headers.common.Authorization = token
+    authToken.value = token;
+    localStorage.setItem("authToken", token);
   }
 
   function clearAuthToken() {
-    localStorage.removeItem('authToken')
-    delete http.defaults.headers.common.Authorization
+    authToken.value = null;
+    localStorage.removeItem("authToken");
   }
 
-  const saved = localStorage.getItem('authToken')
-  if (saved) {
-    http.defaults.headers.common.Authorization = saved
+  async function request(path, options = {}) {
+    const headers = {
+      ...(options.headers || {}),
+    };
+
+    // Solo agrega Content-Type si NO es FormData
+    const isFormData = options.body instanceof FormData;
+    if (!isFormData && !headers["Content-Type"]) {
+      headers["Content-Type"] = "application/json";
+    }
+
+    if (authToken.value) {
+      headers["Authorization"] = authToken.value;
+    }
+
+    const res = await fetch(`${baseURL}${path}`, {
+      ...options,
+      headers,
+    });
+
+    // Manejo de errores más útil
+    const contentType = res.headers.get("content-type") || "";
+    const body = contentType.includes("application/json")
+      ? await res.json().catch(() => null)
+      : await res.text().catch(() => "");
+
+    if (!res.ok) {
+      const msg =
+        typeof body === "string" && body
+          ? body
+          : body?.message || `${res.status} ${res.statusText}`;
+      throw new Error(msg);
+    }
+
+    return body;
   }
 
-  return {
-    get: (url, config) => http.get(url, config),
-    post: (url, data, config) => http.post(url, data, config),
-    setAuthToken,
-    clearAuthToken,
-  }
+  // Helpers
+  const get = (path, options = {}) => request(path, { ...options, method: "GET" });
+  const post = (path, data, options = {}) =>
+    request(path, { ...options, method: "POST", body: JSON.stringify(data) });
+  const put = (path, data, options = {}) =>
+    request(path, { ...options, method: "PUT", body: JSON.stringify(data) });
+  const del = (path, options = {}) => request(path, { ...options, method: "DELETE" });
+
+  return { request, get, post, put, del, setAuthToken, clearAuthToken };
 }

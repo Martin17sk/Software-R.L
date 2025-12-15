@@ -20,4 +20,7 @@ public class Usuario {
 
     @Column(name = "usuario_contrasena", nullable = false, length = 100)
     private String contrasena;
+
+    @Column(name = "activo", nullable = false)
+    private boolean activo;
 }
