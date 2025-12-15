@@ -1,0 +1,33 @@
+import { ref } from 'vue'
+import { useRouter } from 'vue-router'
+import { useHttpClient } from '@composables/useHttpClient'
+
+export function useAuth() {
+  const username = ref('')
+  const password = ref('')
+  const errorMessage = ref(null)
+  const loading = ref(false)
+  const router = useRouter()
+  const { get, setAuthToken, clearAuthToken } = useHttpClient()
+
+  async function login() {
+    errorMessage.value = null
+    loading.value = true
+
+    try {
+      const token = 'Basic ' + btoa(`${username.value}:${password.value}`)
+      setAuthToken(token)
+
+      await get('/api/articulos/nombres')
+
+      await router.push('/pricing/register')
+    } catch (err) {
+      clearAuthToken()
+      errorMessage.value = 'Credenciales inválidas'
+    } finally {
+      loading.value = false
+    }
+  }
+
+  return { username, password, errorMessage, loading, login }
+}

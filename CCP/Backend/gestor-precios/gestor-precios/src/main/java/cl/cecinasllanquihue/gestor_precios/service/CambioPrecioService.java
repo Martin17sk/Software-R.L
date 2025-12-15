@@ -1,0 +1,12 @@
+package cl.cecinasllanquihue.gestor_precios.service;
+
+import cl.cecinasllanquihue.gestor_precios.dto.RegistrarCambioPrecioMultipleRequestDTO;
+import cl.cecinasllanquihue.gestor_precios.dto.RegistrarCambioPrecioMultipleResponseDTO;
+import cl.cecinasllanquihue.gestor_precios.dto.RegistrarCambioPrecioRequestDTO;
+import cl.cecinasllanquihue.gestor_precios.dto.RegistrarCambioPrecioResponseDTO;
+
+public interface CambioPrecioService {
+    RegistrarCambioPrecioResponseDTO registrarCambioPrecio(RegistrarCambioPrecioRequestDTO request);
+
+    RegistrarCambioPrecioMultipleResponseDTO registrarCambioPrecioMultiple(RegistrarCambioPrecioMultipleRequestDTO request);
+}

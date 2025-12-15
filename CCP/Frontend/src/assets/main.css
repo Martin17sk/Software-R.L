@@ -1,0 +1,14 @@
+@import "tailwindcss";
+
+@layer base {
+  h1 {
+    @apply text-[24px] font-semibold ;
+  }
+
+  label {
+    font-family: Inter, system-ui, sans-serif;
+    font-size: 14px;
+    font-weight: 400;
+    color: #545F71
+  }
+}
