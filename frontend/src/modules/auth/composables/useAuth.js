@@ -21,7 +21,8 @@ export function useAuth() {
 
       const api = authApi();
 
-      const me = await api.me();
+      const user = await api.me();
+      console.log(user)
 
       await router.push('/pricing/register')
     } catch (err) {
