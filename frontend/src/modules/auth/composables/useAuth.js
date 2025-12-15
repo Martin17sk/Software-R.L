@@ -1,6 +1,7 @@
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useHttpClient } from '@composables/useHttpClient'
+import { authApi } from '../services/authApi'
 
 export function useAuth() {
   const username = ref('')
@@ -18,7 +19,9 @@ export function useAuth() {
       const token = 'Basic ' + btoa(`${username.value}:${password.value}`)
       setAuthToken(token)
 
-      await get('/api/articulos/nombres')
+      const api = authApi();
+
+      const me = await api.me();
 
       await router.push('/pricing/register')
     } catch (err) {
