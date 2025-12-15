@@ -26,21 +26,25 @@ const routes = [
         path: 'pricing/register',
         name: 'pricing-register',
         component: RegisterPriceView,
+        meta: { requiresAuth: true }
       },
       {
         path: 'pricing/history',
         name: 'pricing-history',
         component: HistoryView,
+        meta: { requiresAuth: true }
       },
       {
         path: 'comparison',
         name: 'comparison',
         component: CompareListsView,
+        meta: { requiresAuth: true }
       },
       {
         path: 'config/parameters',
         name: 'config-parameters',
         component: ParametersView,
+        meta: { requiresAuth: true }
       },
     ],
   },
@@ -52,14 +56,13 @@ const router = createRouter({
 })
 
 router.beforeEach((to, from, next) => {
-  const isPublic = to.meta.public
-  const isLoggedIn = !!localStorage.getItem('authToken') // o usa Pinia
+  const token = localStorage.getItem('authToken')
 
-  if (!isPublic && !isLoggedIn) {
-    return next({ name: 'login' })
+  if (to.meta.requiresAuth && !token) {
+    next("/login")
+  } else {
+    next()
   }
-
-  next()
-})
+});
 
 export default router
