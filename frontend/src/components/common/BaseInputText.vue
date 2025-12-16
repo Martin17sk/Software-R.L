@@ -9,9 +9,11 @@
       {{ label }}
     </label>
 
+    <!-- Icono izquierdo -->
+    <img v-if="iconLeft" :src="iconLeft" alt="" aria-hidden="true" class="h-4 w-4 shrink-0">
+
     <!-- Input -->
-    <input
-      :id="id"
+    <input :id="id"
       :type="type"
       :value="modelValue"
       :disabled="disabled"
@@ -22,7 +24,9 @@
              focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
       :class="disabledClasses"
       @input="onInput"
-    />
+      >
+
+    
   </div>
 </template>
 
@@ -65,6 +69,9 @@ const props = defineProps({
     type: String,
     default: () => `input-${Math.random().toString(36).slice(2)}`,
   },
+
+  iconLeft: { type: String, default: '' },
+  iconRight: { type: String, default: '' },
 })
 
 const emit = defineEmits(['update:modelValue'])
