@@ -1,5 +1,5 @@
 <template>
-    <div class="flex flex-col gap-1" ref="root">
+    <div class="relative flex flex-col gap-1" ref="root">
         <label v-if="label" class="form-label">
             {{ label }}
         </label>
@@ -23,28 +23,29 @@
         </button>
 
         <!-- Panel -->
-        <div v-if="open" class="relative">
-            <div class="absolute z-50 mt-1 w-full rounded-lg border border-slate-200 bg-white shadow-md overflow-hidden"
-                role="listbox">
-                <div v-if="searchable" class="p-2 border-b border-slate-200">
-                    <input v-model="query" type="text" :placeholder="searchPlaceholder" class="w-full rounded-md border border-slate-300 px-3 py-2 text-sm
-           text-slate-900 placeholder:text-slate-400
-           focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500" @keydown.esc.prevent="close" />
-                </div>
-
-                <ul class="py-1 overflow-auto" :style="{ maxHeight: maxMenuHeightPx }">
-                    <li v-for="opt in filteredOptions" :key="opt.value" role="option" class="px-3 py-2 text-sm cursor-pointer select-none
-                   hover:bg-slate-100" :class="opt.value === modelValue ? 'bg-slate-100 font-medium' : ''"
-                        @click="select(opt.value)">
-                        {{ opt.label }}
-                    </li>
-
-                    <li v-if="!filteredOptions.length" class="px-3 py-2 text-sm text-slate-400">
-                        Sin resultados
-                    </li>
-                </ul>
+        <div v-if="open"
+            class="absolute left-0 right-0 top-full mt-1 z-50 mt-1 rounded-lg border border-slate-200 bg-white shadow-md overflow-hidden"
+            role="listbox">
+            <div v-if="searchable" class="p-2 border-b border-slate-200">
+                <input v-model="query" type="text" :placeholder="searchPlaceholder" class="w-full rounded-md border border-slate-300 px-3 py-2 text-sm
+             text-slate-900 placeholder:text-slate-400
+             focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500" @keydown.esc.prevent="close" />
             </div>
+
+            <ul class="py-1 overflow-auto" :style="{ maxHeight: maxMenuHeightPx }">
+                <li v-for="opt in filteredOptions" :key="opt.value" role="option"
+                    class="px-3 py-2 text-sm cursor-pointer select-none hover:bg-slate-100"
+                    :class="String(opt.value) === String(modelValue) ? 'bg-slate-100 font-medium' : ''"
+                    @click="select(opt.value)">
+                    {{ opt.label }}
+                </li>
+
+                <li v-if="!filteredOptions.length" class="px-3 py-2 text-sm text-slate-400">
+                    Sin resultados
+                </li>
+            </ul>
         </div>
+
     </div>
 </template>
 
