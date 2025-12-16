@@ -5,6 +5,7 @@ import RegisterPriceView from '@pricing/views/RegisterPriceView.vue'
 import HistoryView from '@pricing/views/HistoryView.vue'
 import CompareListsView from '@comparison/views/CompareListsView.vue'
 import ParametersView from '@config/views/ParametersView.vue'
+import CompareResultView from '@/modules/comparison/views/CompareResultView.vue'
 
 const routes = [
   {
@@ -38,6 +39,12 @@ const routes = [
         path: 'comparison',
         name: 'comparison',
         component: CompareListsView,
+        meta: { requiresAuth: true }
+      },
+      {
+        path: 'comparison/result',
+        name: 'comparison-result',
+        component: CompareResultView,
         meta: { requiresAuth: true }
       },
       {
