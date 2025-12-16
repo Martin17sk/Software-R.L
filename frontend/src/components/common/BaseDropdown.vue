@@ -68,7 +68,7 @@ const props = defineProps({
     // altura por item (px). 36 suele calzar bien con py-2 text-sm
     itemHeight: { type: Number, default: 36 },
 
-    searchable: { type: Boolean, defaulst: false },
+    searchable: { type: Boolean, default: false },
     searchPlaceholder: { type: String, default: 'Buscar...' },
 
 })
