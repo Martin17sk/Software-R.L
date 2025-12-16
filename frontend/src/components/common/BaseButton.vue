@@ -1,14 +1,17 @@
 <template>
-  <button
-    type="button"
-    :disabled="disabled"
-    class="inline-flex items-center justify-center rounded-lg font-medium
+  <button type="button" :disabled="disabled" class="inline-flex items-center justify-center rounded-lg font-medium
            px-4 py-2 text-sm transition
            focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2"
-    :class="[variantClasses, disabledClasses]"
-    @click="onClick"
-  >
+    :class="[variantClasses, disabledClasses]" @click="onClick">
+
+    <!-- Icono izquierdo -->
+    <img v-if="iconLeft" :src="iconLeft" alt="" aria-hidden="true" class="h-4 w-4 shrink-0">
+
+    <!-- Texto -->
     <slot>{{ label }}</slot>
+
+    <!-- Icono derecho -->
+    <img v-if="iconRight" :src="iconRight" alt="" aria-hidden="true" class="h-4 w-4 shrink-0" />
   </button>
 </template>
 
@@ -19,6 +22,8 @@ const props = defineProps({
   label: { type: String, default: 'Button' },
   disabled: { type: Boolean, default: false },
   variant: { type: String, default: 'accept' }, // accept | danger | ghost
+  iconLeft: { type: String, default: '' },
+  iconRight: { type: String, default: '' },
 })
 
 const emit = defineEmits(['click'])
@@ -36,6 +41,15 @@ const variantClasses = computed(() => {
         p-0
         hover:underline
         focus-visible:ring-0
+      `
+    case 'outline':
+      return `
+        bg-transparent
+        border
+        border-[#D0D5DD]
+        text-[#545F71]
+        hover:bg-[#4880FF]/10
+        focus-visible:ring-[#4880FF]
       `
     default:
       return 'bg-slate-900 text-white hover:bg-slate-800 focus-visible:ring-slate-400'
