@@ -24,7 +24,7 @@ import { ref } from 'vue';
 </script>
 
 <template>
-  <section class="bg-[#F4F4F4] h-screen w-screen flex flex-col justify-center items-center p-4 place-content-between">
+  <section class="bg-[#F4F4F4] h-screen w-screen flex flex-col justify-center items-center place-content-between">
     <header class="h-[180px] w-full flex flex-row py-[50px] justify-center">
       <div class="w-auto">
         <BaseTabs v-model="tab" :tabs="tabs"/>
@@ -40,16 +40,17 @@ import { ref } from 'vue';
             <BaseInputText label="Nombre artículo" class="w-[415px]" iconRight="frontend/src/icons/Lock.png" disabled="true"/>
           </div>
           <div class="w-full flex flex-row place-content-between" >
-            <BaseDropdown label="Lista de precios" placeholder="Seleccionar" v-model="lista" :options="opciones" class="w-[260px]"/>
+            <BaseDropdown label="Lista de precios" placeholder="Seleccionar" v-model="lista" :options="opciones" searchable="true" class="w-[260px]"/>
             <BaseInputText label="Precio anterior" disabled="true" iconRight="frontend\src\icons\Lock.png" class="w-[125px]"/>
             <BaseInputText label="Precio nuevo" class="w-[125px]"/>
           </div>
           <BaseTextarea label="Nota (opcional)" placeholder="Escribe tu nota aquí" rows="4" class="w-[570px]"/>
         </form>
+        <BaseButton label="Ver historial" variant="ghost"/>
       </div>
     </body>
 
-    <footer class="flex flex-col border-t-black gap-[30px]">
+    <footer class="flex flex-col border-t border-t-black gap-[30px] w-full h-[180px] justify-center items-center">
       <div class="flex flex-row gap-[30px]">
         <BaseButton label="Borrar todo" variant="outline" class="w-[250px]"/>
         <BaseButton label="Continuar" variant="accept" class="w-[250px]"/>
