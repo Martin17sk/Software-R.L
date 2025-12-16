@@ -21,7 +21,7 @@ import { computed } from 'vue'
 const props = defineProps({
   label: { type: String, default: 'Button' },
   disabled: { type: Boolean, default: false },
-  variant: { type: String, default: 'accept' }, // accept | danger | ghost
+  variant: { type: String, default: 'accept' }, // accept | danger | ghost | outline
   iconLeft: { type: String, default: '' },
   iconRight: { type: String, default: '' },
 })
@@ -32,6 +32,8 @@ const variantClasses = computed(() => {
   switch (props.variant) {
     case 'accept':
       return 'bg-[#34C759] text-white hover:bg-[#2FAF4F] focus-visible:ring-[#34C759]'
+    case 'secondary':
+      return 'bg-[#B8B8B8] text-white hover:bg-[#A6A6A6] active:bg-[#8F8F8F] focus-visible:ring-[#B8B8B8]'
     case 'danger':
       return 'bg-[#DC2626] text-white hover:bg-[#B91C1C] focus-visible:ring-[#DC2626]'
     case 'ghost':
