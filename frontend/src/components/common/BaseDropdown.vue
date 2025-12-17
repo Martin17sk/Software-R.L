@@ -33,11 +33,11 @@
             </div>
 
             <ul class="py-1 overflow-auto" :style="{ maxHeight: maxMenuHeightPx }">
-                <li v-for="opt in filteredOptions" :key="opt.value" role="option"
-                    class="px-3 py-2 text-sm cursor-pointer select-none hover:bg-slate-100"
-                    :class="String(opt.value) === String(modelValue) ? 'bg-slate-100 font-medium' : ''"
-                    @click="select(opt.value)">
+                <li v-for="opt in filteredOptions" :key="opt.value" role="option" class="px-3 py-2 text-sm select-none"
+                    :class="[String(opt.value) === String(modelValue) ? 'bg-slate-100 font-medium' : '', opt.disabled ? 'text-slate-400 cursor-not-allowed' : 'cursor-pointer hover:bg-slate-100']"
+                    @click="!opt.disabled && select(opt.value)">
                     {{ opt.label }}
+
                 </li>
 
                 <li v-if="!filteredOptions.length" class="px-3 py-2 text-sm text-slate-400">
