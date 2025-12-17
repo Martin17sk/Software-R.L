@@ -5,13 +5,19 @@
     :class="[variantClasses, disabledClasses]" @click="onClick">
 
     <!-- Icono izquierdo -->
-    <img v-if="iconLeft" :src="iconLeft" alt="" aria-hidden="true" class="h-4 w-4 shrink-0">
+    <span v-if="$slots.iconLeft" class="flex items-center text-inherit">
+      <slot name="iconLeft" />
+    </span>
+
 
     <!-- Texto -->
     <slot>{{ label }}</slot>
 
     <!-- Icono derecho -->
-    <img v-if="iconRight" :src="iconRight" alt="" aria-hidden="true" class="h-4 w-4 shrink-0" />
+    <span v-if="$slots.iconRight" class="flex items-center text-inherit">
+      <slot name="iconRight" />
+    </span>
+
   </button>
 </template>
 
@@ -22,8 +28,6 @@ const props = defineProps({
   label: { type: String, default: 'Button' },
   disabled: { type: Boolean, default: false },
   variant: { type: String, default: 'accept' }, // accept | danger | ghost | outline
-  iconLeft: { type: String, default: '' },
-  iconRight: { type: String, default: '' },
 })
 
 const emit = defineEmits(['click'])
