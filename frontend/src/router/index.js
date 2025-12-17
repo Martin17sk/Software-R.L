@@ -4,8 +4,8 @@ import LoginView from '@auth/views/LoginView.vue'
 import RegisterPriceView from '@pricing/views/RegisterPriceView.vue'
 import HistoryView from '@pricing/views/HistoryView.vue'
 import CompareListsView from '@comparison/views/CompareListsView.vue'
-import ParametersView from '@config/views/ParametersView.vue'
 import CompareResultView from '@/modules/comparison/views/CompareResultView.vue'
+import ConfigurationView from '@/modules/config/views/ConfigurationView.vue'
 
 const routes = [
   {
@@ -48,9 +48,9 @@ const routes = [
         meta: { requiresAuth: true }
       },
       {
-        path: 'config/parameters',
-        name: 'config-parameters',
-        component: ParametersView,
+        path: 'configuration',
+        name: 'configuration',
+        component: ConfigurationView,
         meta: { requiresAuth: true }
       },
     ],
