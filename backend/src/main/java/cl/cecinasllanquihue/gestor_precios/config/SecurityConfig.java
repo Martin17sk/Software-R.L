@@ -3,6 +3,7 @@ package cl.cecinasllanquihue.gestor_precios.config;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
+import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -26,16 +27,21 @@ public class SecurityConfig {
 
     @Bean
     SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-        http
-            .csrf(csrf -> csrf.disable())
+        http.csrf(csrf -> csrf.disable())
             .cors(cors -> cors.configurationSource(corsConfigurationSource()))
-            .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+            .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED))
             .authorizeHttpRequests(auth -> auth
-                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-                        .requestMatchers("/api/publico/**").permitAll()
-                        .anyRequest().authenticated()
-                ).httpBasic(Customizer.withDefaults());
+                .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+                .requestMatchers("/api/login", "/api/logout").permitAll()
+                .requestMatchers("/api/publico/**").permitAll()
+                .anyRequest().authenticated()
+            );
         return http.build();
+    }
+
+    @Bean
+    public AuthenticationManager authenticationManager(org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration config) throws Exception {
+        return config.getAuthenticationManager();
     }
 
     @Bean
@@ -61,7 +67,8 @@ public class SecurityConfig {
     @Bean
     public UserDetailsService userDetailsService(UsuarioRepository usuarioRepository) {
         return username -> {
-            Usuario usuario = usuarioRepository.findByNombre(username).orElseThrow(() -> new UsernameNotFoundException("Usuario no encontrado"));
+            Usuario usuario = usuarioRepository.findByNombre(username)
+                    .orElseThrow(() -> new UsernameNotFoundException("Usuario no encontrado"));
 
             String pwd = usuario.getContrasena();
             if (pwd == null || !pwd.startsWith("{bcrypt}")) {
@@ -75,9 +82,7 @@ public class SecurityConfig {
             return new org.springframework.security.core.userdetails.User(
                     usuario.getNombre(),
                     pwd,
-                    java.util.List.of(new SimpleGrantedAuthority("ROLE_USER"))
-            );
+                    java.util.List.of(new SimpleGrantedAuthority("ROLE_USER")));
         };
     };
 }
-
