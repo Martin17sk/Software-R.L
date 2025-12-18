@@ -5,20 +5,15 @@ import cl.cecinasllanquihue.gestor_precios.dto.LoginResponse;
 import cl.cecinasllanquihue.gestor_precios.model.Usuario;
 import cl.cecinasllanquihue.gestor_precios.repository.UsuarioRepository;
 import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
+
 import jakarta.servlet.http.HttpSession;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.web.context.SecurityContextRepository;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.security.web.context.HttpSessionSecurityContextRepository;
 import org.springframework.security.core.context.SecurityContext;
-import org.springframework.security.core.context.SecurityContextHolder;
 
 
 @RestController
@@ -28,51 +23,36 @@ public class AuthController {
     private final AuthenticationManager authenticationManager;
     private final UsuarioRepository usuarioRepository;
 
-    public AuthController(UsuarioRepository usuarioRepository, AuthenticationManager authenticationManager) {
+    public AuthController(AuthenticationManager authenticationManager, UsuarioRepository usuarioRepository) {
         this.authenticationManager = authenticationManager;
         this.usuarioRepository = usuarioRepository;
     }
 
     @PostMapping("/login")
     public ResponseEntity<LoginResponse> login(
-        @RequestBody LoginRequest request, 
-        HttpServletRequest httpRequest, 
-        HttpServletResponse httpResponse
+            @RequestBody LoginRequest request
     ) {
-        try {
-            Authentication auth = authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(
-                    request.getUsername(),
-                    request.getPassword()
-                )
-            );
+        var token = new UsernamePasswordAuthenticationToken(request.getUsername(), request.getPassword());
+        Authentication auth = authenticationManager.authenticate(token);
 
-            SecurityContextHolder.getContext().setAuthentication(auth);
+        // fuerza sesión (para que exista JSESSIONID real)
 
-            SecurityContext context = SecurityContextHolder.createEmptyContext();
-            context.setAuthentication(auth);
-            SecurityContextHolder.setContext(context);
+        SecurityContext context = SecurityContextHolder.createEmptyContext();
+        context.setAuthentication(auth);
+        SecurityContextHolder.setContext(context);
 
-            httpRequest.getSession(true).setAttribute(
-                HttpSessionSecurityContextRepository.SPRING_SECURITY_CONTEXT_KEY, 
-                context
-            );
-
-            Usuario usuario = usuarioRepository.findByNombre(request.getUsername()).orElseThrow();
-
-            return ResponseEntity.ok(new LoginResponse(usuario.getId(), usuario.getNombre()));
-        } catch (BadCredentialsException ex) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-        }
+        Usuario usuario = usuarioRepository.findByNombre(request.getUsername()).orElseThrow();
+        return ResponseEntity.ok(new LoginResponse(usuario.getId(), usuario.getNombre()));
     }
+
 
     @PostMapping("/logout")
     public ResponseEntity<Void> logout(HttpServletRequest request) {
-        HttpSession session = request.getSession(false);
-        if (session != null) session.invalidate();
-
         SecurityContextHolder.clearContext();
 
+
+        HttpSession session = request.getSession(false);
+        if (session != null) session.invalidate();
         return ResponseEntity.noContent().build();
     }
 }

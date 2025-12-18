@@ -6,6 +6,7 @@ import cl.cecinasllanquihue.gestor_precios.dto.RegistrarCambioPrecioRequestDTO;
 import cl.cecinasllanquihue.gestor_precios.dto.RegistrarCambioPrecioResponseDTO;
 import cl.cecinasllanquihue.gestor_precios.model.*;
 import cl.cecinasllanquihue.gestor_precios.repository.*;
+import cl.cecinasllanquihue.gestor_precios.security.AuthenticatedUserProvider;
 import cl.cecinasllanquihue.gestor_precios.service.CambioPrecioService;
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.stereotype.Service;
@@ -23,18 +24,14 @@ public class CambioPrecioServiceImpl implements CambioPrecioService {
     private final ListaPrecioRepository listaPrecioRepository;
     private final PrecioActualRepository precioActualRepository;
     private final HistorialRepository historialRepository;
-    private final UsuarioSesionServiceImpl usuarioSesionServiceImpl;
+    private final AuthenticatedUserProvider authUser;
 
-    public CambioPrecioServiceImpl(ArticuloRepository articuloRepository,
-                                   ListaPrecioRepository listaPrecioRepository,
-                                   PrecioActualRepository precioActualRepository,
-                                   HistorialRepository historialRepository,
-                                   UsuarioSesionServiceImpl usuarioSesionServiceImpl) {
+    public CambioPrecioServiceImpl(ArticuloRepository articuloRepository, ListaPrecioRepository listaPrecioRepository, PrecioActualRepository precioActualRepository, HistorialRepository historialRepository, AuthenticatedUserProvider authUser) {
         this.articuloRepository = articuloRepository;
         this.listaPrecioRepository = listaPrecioRepository;
         this.precioActualRepository = precioActualRepository;
         this.historialRepository = historialRepository;
-        this.usuarioSesionServiceImpl = usuarioSesionServiceImpl;
+        this.authUser = authUser;
     }
 
     @Override
@@ -53,7 +50,7 @@ public class CambioPrecioServiceImpl implements CambioPrecioService {
         ListaPrecio listaPrecio = listaPrecioRepository.findById(request.getListaPrecioId())
                 .orElseThrow(() -> new EntityNotFoundException("PRE_E002: Lista de precio no existe"));
 
-        Usuario usuario = usuarioSesionServiceImpl.getUsuarioActual();
+        Usuario usuario = authUser.getUsuarioActual();
 
         // Obtener precio actual
         Optional<PrecioActual> precioActualOpt = precioActualRepository
