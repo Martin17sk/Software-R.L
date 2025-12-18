@@ -1,9 +1,20 @@
 <script setup>
-import { useAuth } from '@auth/composables/useAuth'
 import BaseButton from '@/components/common/BaseButton.vue';
 import BaseInputText from '@/components/common/BaseInputText.vue';
+import { useAuthStore } from '@/stores/auth.store';
+import { useRouter } from 'vue-router';
+import { useAuth } from '../composables/useAuth';
+
 
 const { username, password, errorMessage, loading, login } = useAuth()
+
+const authStore = useAuthStore()
+const router = useRouter()
+
+if (authStore.isAuthenticated) {
+  router.replace({name: "home"})
+}
+
 </script>
 
 <template>
