@@ -6,6 +6,7 @@ import HistoryView from '@pricing/views/HistoryView.vue'
 import CompareListsView from '@comparison/views/CompareListsView.vue'
 import CompareResultView from '@/modules/comparison/views/CompareResultView.vue'
 import ConfigurationView from '@/modules/config/views/ConfigurationView.vue'
+import { useAuthStore } from '@/stores/auth.store'
 
 const routes = [
   {
@@ -17,6 +18,7 @@ const routes = [
   {
     path: '/',
     component: () => import('@components/layout/MainLayout.vue'),
+    meta: {requiresAuth: true},
     children: [
       {
         path: '',
@@ -62,14 +64,27 @@ const router = createRouter({
   routes,
 })
 
-router.beforeEach((to, from, next) => {
-  const token = localStorage.getItem('authToken')
+router.beforeEach(async (to) => {
+  const auth = useAuthStore();
 
-  if (to.meta.requiresAuth && !token) {
-    next("/login")
-  } else {
-    next()
+  if (auth.loading) {
+    await new Promise((resolve) => {
+      const stop = auth.$subscribe(() => {
+        if (!auth.loading) {
+          stop()
+          resolve()
+        }
+      })
+    })
   }
+
+  if (to.meta.public) return true
+
+  if (to.meta.requiresAuth && !auth.isAuthenticated){
+    return {name: "login"}
+  }
+
+  return true
 });
 
 export default router
