@@ -7,12 +7,10 @@ import BaseTabs from '@/components/common/BaseTabs.vue';
 import BaseSwitch from '@/components/common/BaseSwitch.vue';
 
 import Lock from '@/icons/Lock.png';
-import IconHistory from '@/icons/clock.svg';
-import IconSettings from '@/icons/settings.svg';
 
 import { computed, ref, watch } from 'vue';
 import ConfirmPriceChangeModal from '@/components/modals/ConfirmPriceChangeModal.vue';
-import BaseIconButton from '@/components/common/BaseIconButton.vue';
+import HeaderBar from '@/components/layout/HeaderBar.vue';
 
 // --- Listas de precios (Traer de BD) ---
 const opciones = [
@@ -147,34 +145,19 @@ const listaSeleccionada = computed(() => {
 
 <template>
   <section class="bg-[#F4F4F4] h-screen w-screen flex flex-col justify-center items-center place-content-between">
-    <header class="h-[180px] w-full flex flex-row px-[60px] items-center">
-      <!-- Izquierda (vacío o posible botón volver) -->
-      <div class="flex-1"></div>
-
-      <!-- Centro: Tabs -->
-      <div>
+    <HeaderBar>
+      <template #center>
         <BaseTabs v-model="tab" :tabs="tabs" />
-      </div>
-
-      <!-- Derecha: iconos -->
-      <div class="flex-1 flex justify-end items-center gap-2">
-        <BaseIconButton title="Historial" @click="goToHistory">
-          <img :src="IconHistory" alt="" class="h-8 w-8">
-        </BaseIconButton>
-
-        <BaseIconButton title="Configuración" @click="goToSettings">
-          <img :src="IconSettings" alt="" class="h-8 w-8">
-        </BaseIconButton>
-      </div>
-    </header>
+      </template>
+    </HeaderBar>
 
     <main class="h-full">
       <div class="gap-[20px]">
         <h1>Cambio de precio de artículo</h1>
         <form action="" class="gap-[20px] flex flex-col">
-          <div class="w-full place-content-between flex flex-row">
+          <div class="w-full place-content-between flex flex-row gap-4">
             <BaseInputText label="Códgo artículo" class="w-[125px]" />
-            <BaseInputText label="Nombre artículo" class="w-[415px]" :iconRight="Lock" :disabled="true" />
+            <BaseInputText label="Nombre artículo" class="w-[400px]" :iconRight="Lock" :disabled="true" />
           </div>
 
           <!-- Modo simple (variasListas = false) -->
@@ -189,7 +172,7 @@ const listaSeleccionada = computed(() => {
 
           <div v-if="!variasListas" class="w-full">
             <BaseTextarea label="Nota (opcional)" placeholder="Escribe tu nota aquí" v-model="notaSimple" :rows="4"
-              class="w-[570px]" />
+              class="w-full" />
           </div>
 
           <!-- Modo varias listas (variasListas = true) -->
@@ -197,13 +180,14 @@ const listaSeleccionada = computed(() => {
 
             <div v-for="row in priceRows" :key="row.id" class="w-full flex flex-col gap-2">
               <!-- Fila principal -->
-              <div class="w-full flex flex-row items-end gap-4">
+              <div class="w-full relative flex flex-row items-end gap-4">
                 <!-- Botón eliminar -->
-                <button v-if="canRemove" type="button" class="mb-2 h-5 w-5 rounded-full border border-red-400 text-red-500
-               flex items-center justify-center hover:bg-red-50 cursor-pointer" title="Eliminar lista"
+                <button v-if="canRemove" type="button" class="absolute -left-7 bottom-[10px] h-5 w-5 rounded-full border border-red-400 text-red-500
+         flex items-center justify-center hover:bg-red-50 cursor-pointer" title="Eliminar lista"
                   @click="removeRow(row.id)">
-                  <span class="block text-[12px] font-bold leading-[1] translate-y-[-1px] translate-x-[0.5px]">−</span>
+                  <span class="block text-[12px] font-bold leading-[1] translate-y-[-1px]">−</span>
                 </button>
+
 
                 <BaseDropdown label="Lista de precios" placeholder="Seleccionar" :modelValue="row.lista"
                   @update:modelValue="val => setRowLista(row, val)" :options="optionForRow(row)" :searchable="true"
@@ -215,7 +199,7 @@ const listaSeleccionada = computed(() => {
                 <BaseInputText label="Precio nuevo" v-model="row.precioNuevo" class="w-[125px]" />
 
                 <!-- Botón Nota -->
-                <div class="flex flex-col gap-1">
+                <div class="absolute -right-20 bottom-[6px]">
                   <!-- label fantasma para calzar con BaseInputText/BaseDropdown -->
                   <span class="text-[14px] text-transparent select-none">.</span>
 
@@ -226,7 +210,7 @@ const listaSeleccionada = computed(() => {
                       ? 'border-red-400 text-red-500 bg-red-50'
                       : 'border-slate-300 text-slate-500 bg-white'">
                       <!-- usa leading-none + flex, pero además fija line-height -->
-                      <span class="block text-[12px] font-bold leading-[1] translate-y-[-1px] translate-x-[0.5px]">
+                      <span class="block text-[12px] font-bold leading-[1] translate-y-[-1px]">
                         {{ row.showNota ? '−' : '+' }}
                       </span>
                     </span>
