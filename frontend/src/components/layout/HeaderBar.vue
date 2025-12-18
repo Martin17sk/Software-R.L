@@ -15,7 +15,7 @@ function goToHistory() {
 }
 
 function goToSettings() {
-    router.push({ name: "settings" });
+    router.push({ name: "configuration" });
 }
 </script>
 

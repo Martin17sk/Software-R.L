@@ -24,21 +24,14 @@ public class UsuarioSesionServiceImpl implements UsuarioSesionService {
 
         ServletRequestAttributes attributes = (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
 
-        if (attributes == null) {
-            throw new IllegalStateException("No hay request activa");
-        }
+        if (attributes == null) return null;
 
         HttpSession session = attributes.getRequest().getSession(false);
-        if (session == null) {
-            throw new IllegalStateException("No hay sesión activa. Usuario no autenticado.");
-        }
+        if (session == null) return null;
 
         Integer usuarioId = (Integer) session.getAttribute(ATTR_USUARIO_ID);
-        if (usuarioId == null) {
-            throw new IllegalStateException("No se encontró USUARIO_ID en la sesión. Usuario no autenticado.");
-        }
+        if (usuarioId == null) return null;
 
-        return usuarioRepository.findById(usuarioId)
-                .orElseThrow(()-> new IllegalStateException("Usuario de sesión no existe en BD"));
+        return usuarioRepository.findById(usuarioId).orElse(null);
     }
 }

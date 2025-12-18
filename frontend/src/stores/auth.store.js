@@ -1,47 +1,58 @@
 import { defineStore } from "pinia";
-import { login as apiLogin, logout as apiLogout, me as apiMe } from "@/services/auth.service";
+import api from "@/services/axios";
 
 export const useAuthStore = defineStore("auth", {
   state: () => ({
-    user: null,       // { usuarioId, username } según tu backend
+    user: null, // objeto usuario devuelto por el backend
     loading: false,
   }),
 
   getters: {
-    isAuthenticated: (state) => !!state.user,
+    isAuthenticated: (state) => !!state.user
   },
 
   actions: {
+    // Se llama al inicar la app (App.vue)
     async init() {
-      // Se llama al arrancar la app para recuperar sesión si existe
       this.loading = true;
       try {
-        this.user = await apiMe();
-      } catch {
-        this.user = null;
+        const res = await api.get("/auth/me");
+        this.user = res.data
+      } catch (err) {
+        // No hay sesion valida
+        this.user = null
       } finally {
-        this.loading = false;
+        this.loading = false
       }
     },
 
+    // Login real (sesion)
     async login(username, password) {
-      this.loading = true;
+      this.loading = true
       try {
-        this.user = await apiLogin(username, password);
-        return this.user;
+        const res = await api.post("/login", {
+          username,
+          password,
+        });
+
+        //El backend crea la sesion y devuelve el usuario
+        this.user = res.data
+        return res.data
+      } catch (err) {
+        this.user = null;
+        throw err
       } finally {
-        this.loading = false;
+        this.loading = false
       }
     },
 
-    async logout() {
-      this.loading = true;
+    // Logout real
+    async logout(){
       try {
-        await apiLogout();
+        await api.post("/logout")
       } finally {
-        this.user = null;
-        this.loading = false;
+        this.user = null
       }
-    },
-  },
-});
+    }
+  }
+})
