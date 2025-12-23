@@ -8,6 +8,7 @@ import WhiteArrowLeftIcon from '@/icons/WhiteArrowLeft.png'
 import TrashIcon from '@/icons/Trash.png'
 
 import { computed, onMounted, onBeforeUnmount, ref } from 'vue';
+import { useRouter } from 'vue-router';
 
 const columns = [
   { key: 'codigo', label: 'Código Artículo' },
@@ -20,6 +21,8 @@ const columns = [
   { key: 'nota', label: 'Nota' },
   { key: 'responsable', label: 'Responsable' },
 ]
+
+const router = useRouter()
 
 const rows = ref([
   {
@@ -129,6 +132,10 @@ function canDelete(row) {
   return remainingMs(row) > 0;
 }
 
+function goBack() {
+  router.push({name: 'register-price'})
+}
+
 /* async function onDelete(row) {
   await http.delete(`/pricing/history/${row.codigo}`);
 
@@ -145,7 +152,7 @@ function canDelete(row) {
   <section class="bg-[#F4F4F4] min-h-screen w-full flex flex-col justify-center items-center place-content-between">
     <header class="h-[180px] w-full flex flex-row py-[50px] justify-start px-[60px] shrink-0">
       <BaseButton label="Volver" :icon-left="WhiteArrowLeftIcon" variant="secondary"
-        class="gap-[12px] w-[150px] h-[65px]" />
+        class="gap-[12px] w-[150px] h-[65px]" @click="goBack"/>
     </header>
 
     <main class="flex-1 w-full flex flex-col justify-start items-center">

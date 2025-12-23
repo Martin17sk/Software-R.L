@@ -1,13 +1,16 @@
 <script setup>
-import { ref } from 'vue'
+import { ref, watch } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 import BaseDropzone from '@/components/common/BaseDropzone.vue'
 import BaseButton from '@/components/common/BaseButton.vue'
 import BaseTabs from '@/components/common/BaseTabs.vue'
-import BaseSwitch from '@/components/common/BaseSwitch.vue'
 
 import compareIcon from '@/icons/Compare.png'
 
 const excelFile = ref(null)
+
+const router = useRouter()
+const route = useRoute()
 
 const tab = ref('comparar');
 const tabs = [
@@ -15,9 +18,41 @@ const tabs = [
   { value: 'comparar', label: 'Comparar listas de precios' },
 ]
 
+const tabToRouteName = {
+  precio: 'register-price',
+  comparar: 'compare-lists'
+}
+
+function syncTabWithRoute() {
+  if (route.name === 'register-price') {
+    tab.value = 'precio'
+  } else {
+    tab.value = 'comparar'
+  }
+}
+
+syncTabWithRoute()
+
+watch (
+  () => route.name,
+  () => {
+    syncTabWithRoute()
+  }
+)
+
+watch(tab, (value) => {
+  const targetRoute = tabToRouteName[value]
+  if (!targetRoute || targetRoute === route.name) return
+  router.push({name: targetRoute})
+})
+
 function onDone() {
   if (!excelFile.value) return
   // aquí llamas al backend (FormData)
+}
+
+function goToResults() {
+  router.push({name: 'compare-result'})
 }
 </script>
 
@@ -60,7 +95,7 @@ function onDone() {
 
     <footer class="flex flex-col border-t border-t-black gap-[30px] w-full h-[180px] justify-center items-center">
       <div class="flex flex-row gap-[30px]">
-        <BaseButton label="Comparar" variant="accept" class="w-[250px]" />
+        <BaseButton label="Comparar" variant="accept" class="w-[250px]" @click="goToResults"/>
       </div>
     </footer>
   </section>

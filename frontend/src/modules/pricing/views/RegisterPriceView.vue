@@ -9,6 +9,7 @@ import BaseSwitch from '@/components/common/BaseSwitch.vue';
 import Lock from '@/icons/Lock.png';
 
 import { computed, onMounted, ref, watch } from 'vue';
+import { useRoute, useRouter } from 'vue-router';
 import { usePricingStore } from '@/stores/pricing.store';
 import ConfirmPriceChangeModal from '@/components/modals/ConfirmPriceChangeModal.vue';
 import HeaderBar from '@/components/layout/HeaderBar.vue';
@@ -16,10 +17,41 @@ import HeaderBar from '@/components/layout/HeaderBar.vue';
 const pricingStore = usePricingStore()
 onMounted(() => pricingStore.loadPriceLists())
 
+const router = useRouter()
+const route = useRoute()
+
 // --- Listas de precios (Traer de BD) ---
 const opciones = computed(() => pricingStore.options)
 
 const tab = ref('precio');
+
+const tabToRouteName = {
+  precio: 'register-price',
+  comparar: 'compare-lists',
+};
+
+function syncTabWithRoute() {
+  if (route.name === 'compare-lists') {
+    tab.value = 'comparar';
+  } else {
+    tab.value = 'precio';
+  }
+}
+
+syncTabWithRoute();
+
+watch(
+  () => route.name,
+  () => {
+    syncTabWithRoute();
+  },
+);
+
+watch(tab, (value) => {
+  const targetRoute = tabToRouteName[value];
+  if (!targetRoute || targetRoute === route.name) return;
+  router.push({ name: targetRoute });
+});
 
 const tabs = [
   { value: 'precio', label: 'Cambio de precio de artículo' },
@@ -145,12 +177,6 @@ const listaSeleccionada = computed(() => {
 
 <template>
   <section class="bg-[#F4F4F4] h-screen w-screen flex flex-col justify-center items-center place-content-between">
-    <HeaderBar>
-      <template #center>
-        <BaseTabs v-model="tab" :tabs="tabs" />
-      </template>
-    </HeaderBar>
-
     <main class="h-full">
       <div class="gap-[20px]">
         <h1>Cambio de precio de artículo</h1>

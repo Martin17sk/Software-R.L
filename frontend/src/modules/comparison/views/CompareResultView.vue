@@ -10,6 +10,8 @@ import BaseInputText from '@/components/common/BaseInputText.vue';
 import BaseDropdown from '@/components/common/BaseDropdown.vue';
 import { computed } from 'vue';
 import { ref } from 'vue';
+import { useRouter } from 'vue-router';
+import router from '@/router';
 
 
 
@@ -145,12 +147,15 @@ const displayedRows = computed(() => {
     })
 })
 
+function goBack() {
+    router.push({name: 'compare-lists'})
+}
 </script>
 
 <template>
     <section class="bg-[#F4F4F4] min-h-screen w-full flex flex-col justify-center items-center place-content-between">
         <header class="h-[180px] w-full flex flex-row py-[50px] justify-start px-[60px] shrink-0">
-            <BaseButton label="Volver" :icon-left="WhiteArrowLeftIcon" variant="secondary" class="gap-[12px] w-[150px] h-[65px]" />
+            <BaseButton label="Volver" :icon-left="WhiteArrowLeftIcon" variant="secondary" class="gap-[12px] w-[150px] h-[65px]" @click="goBack"/>
         </header>
 
         <main class="flex-1 w-full flex flex-col justify-start items-center">
