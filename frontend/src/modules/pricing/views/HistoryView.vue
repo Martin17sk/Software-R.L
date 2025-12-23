@@ -4,11 +4,12 @@ import BaseTable from '@/components/common/BaseTable.vue'
 import BaseInputText from '@/components/common/BaseInputText.vue';
 import BaseDropdown from '@/components/common/BaseDropdown.vue';
 
-import WhiteArrowLeftIcon from '@/icons/WhiteArrowLeft.png'
+import ArrowLeftIcon from '@/icons/arrow-left.svg'
 import TrashIcon from '@/icons/Trash.png'
 
 import { computed, onMounted, onBeforeUnmount, ref } from 'vue';
 import { useRouter } from 'vue-router';
+import FooterBar from '@/components/layout/FooterBar.vue';
 
 const columns = [
   { key: 'codigo', label: 'Código Artículo' },
@@ -132,7 +133,7 @@ function canDelete(row) {
   return remainingMs(row) > 0;
 }
 
-function goBack() {
+function goToRegister() {
   router.push({name: 'register-price'})
 }
 
@@ -149,14 +150,9 @@ function goBack() {
 </script>
 
 <template>
-  <section class="bg-[#F4F4F4] min-h-screen w-full flex flex-col justify-center items-center place-content-between">
-    <header class="h-[180px] w-full flex flex-row py-[50px] justify-start px-[60px] shrink-0">
-      <BaseButton label="Volver" :icon-left="WhiteArrowLeftIcon" variant="secondary"
-        class="gap-[12px] w-[150px] h-[65px]" @click="goBack"/>
-    </header>
-
-    <main class="flex-1 w-full flex flex-col justify-start items-center">
-      <div class="flex flex-col gap-[50px] w-full max-w-[1200px] px-6">
+  <section class="bg-[#F4F4F4] h-full w-full flex flex-col">
+    <main class="flex-1 min-h-0 w-full flex flex-col items-center overflow-hidden">
+      <div class="flex flex-col gap-[50px] w-full max-w-[1200px] px-6 py-6 min-h-0">
         <!-- Toolbar -->
         <div class="flex flex-row gap-[20px] justify-center items-end shrink-0">
           <BaseInputText label="Buscar" placeholder="Buscar artículo por código o nombre" :icon-right="Search"
@@ -168,7 +164,7 @@ function goBack() {
         <div class="w-full h-[1px] border-1 border-[#000] border-dotted shrink-0"></div>
 
         <!-- Tabla de resultados -->
-        <div class="flex-1 min-h-0 w-full">
+        <div class="flex-1 min-h-0 w-full overflow-hidden">
           <BaseTable :columns="columns" :rows="displayedRows" :max-height="420">
             <template #cell-tiempoRestante="{ row }">
               <div class="flex items-center justify-center gap-3">
@@ -186,8 +182,14 @@ function goBack() {
       </div>
     </main>
 
-    <footer
-      class="shrink-0 flex flex-col border-t border-t-black gap-[30px] w-full h-[180px] justify-center items-center">
-    </footer>
+    <FooterBar>
+      <template #center>
+        <BaseButton label="Volver" variant="secondary" class="w-[200px] h-[40px] gap-[10px]" @click="goToRegister">
+          <template #iconLeft>
+            <ArrowLeftIcon class="h-5 w-5 text-white" />
+          </template>
+        </BaseButton>
+      </template>
+    </FooterBar>
   </section>
 </template>

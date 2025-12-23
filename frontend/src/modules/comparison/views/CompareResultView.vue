@@ -2,7 +2,6 @@
 import BaseButton from '@/components/common/BaseButton.vue';
 import BaseTable from '@/components/common/BaseTable.vue'
 
-import WhiteArrowLeftIcon from '@/icons/WhiteArrowLeft.png'
 import Check from '@/icons/Check.png'
 import Cross from '@/icons/X.png'
 import Search from '@/icons/Search.png'
@@ -12,6 +11,8 @@ import { computed } from 'vue';
 import { ref } from 'vue';
 import { useRouter } from 'vue-router';
 import router from '@/router';
+import FooterBar from '@/components/layout/FooterBar.vue';
+import ArrowLeftIcon from '@/icons/arrow-left.svg'
 
 
 
@@ -147,18 +148,14 @@ const displayedRows = computed(() => {
     })
 })
 
-function goBack() {
-    router.push({name: 'compare-lists'})
+function goToCompare() {
+    router.push({ name: 'compare-lists' })
 }
 </script>
 
 <template>
-    <section class="bg-[#F4F4F4] min-h-screen w-full flex flex-col justify-center items-center place-content-between">
-        <header class="h-[180px] w-full flex flex-row py-[50px] justify-start px-[60px] shrink-0">
-            <BaseButton label="Volver" :icon-left="WhiteArrowLeftIcon" variant="secondary" class="gap-[12px] w-[150px] h-[65px]" @click="goBack"/>
-        </header>
-
-        <main class="flex-1 w-full flex flex-col justify-start items-center">
+    <section class="bg-[#F4F4F4] h-full w-full flex flex-col">
+        <main class="flex-1 min-h-0 w-full flex flex-col items-center overflow-hidden">
             <div class="flex flex-col gap-[50px] w-full max-w-[900px] px-6">
                 <!-- Toolbar -->
                 <div class="flex flex-row gap-[20px] justify-center items-end shrink-0">
@@ -184,7 +181,7 @@ function goBack() {
 
                 <!-- Tabla de resultados -->
                 <div class="flex-1 min-h-0 w-full">
-                    <BaseTable :columns="columns" :rows="displayedRows" :max-height="420">
+                    <BaseTable :columns="columns" :rows="displayedRows" :max-height="500">
                         <template #cell-estado="{ value }">
                             <span v-if="value === 'warning'" class="inline-flex justify-center text-red-500">⚠️</span>
                         </template>
@@ -193,8 +190,14 @@ function goBack() {
             </div>
         </main>
 
-        <footer
-            class="shrink-0 flex flex-col border-t border-t-black gap-[30px] w-full h-[180px] justify-center items-center">
-        </footer>
+        <FooterBar>
+            <template #center>
+                <BaseButton label="Volver" variant="secondary" class="w-[200px] gap-[10px]" @click="goToCompare">
+                    <template #iconLeft>
+                        <ArrowLeftIcon class="h-6 w-6" />
+                    </template>
+                </BaseButton>
+            </template>
+        </FooterBar>
     </section>
 </template>

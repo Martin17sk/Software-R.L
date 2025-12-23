@@ -20,7 +20,7 @@ function goToSettings() {
 </script>
 
 <template>
-    <header class="h-[180px] w-full flex flex-row px-[60px] items-center bg-[#F4F4F4]">
+    <header class="h-[120px] w-full flex flex-row px-[60px] items-center bg-[#F4F4F4]">
 
         <!-- Izquierda -->
         <div class="flex-1 flex items-center">
@@ -43,9 +43,9 @@ function goToSettings() {
             </BaseIconButton>
 
             <!-- Divider -->
-            <div class="w-px h-8  bg-black/30"></div>
+            <div class="w-px h-8 bg-black/30"></div>
 
-            <UserMenuDropdown/>
+            <UserMenuDropdown />
         </div>
 
     </header>

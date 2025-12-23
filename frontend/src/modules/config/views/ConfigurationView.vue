@@ -6,9 +6,11 @@ import BaseInputText from '@/components/common/BaseInputText.vue'
 import IconChevronDown from '@/icons/chevron-down.svg?component'
 import IconPlus from '@/icons/plus.svg?component'
 import IconPencilSquare from '@/icons/pencil-square.svg?component'
+import IconArrowLeft from '@/icons/arrow-left.svg'
 import AddPriceListModal from '@/components/modals/AddPriceListModal.vue'
 import { fetchSystems } from '../services/configApi'
 import api from '@/services/axios'
+import router from '@/router'
 
 const addListOpen = ref(false)
 const addListSubmitting = ref(false)
@@ -47,7 +49,9 @@ function save() {
   // llamar API
 }
 
-
+function goToRegister () {
+  router.push({name: 'register-price'})
+}
 
 function openAddList() {
   addListOpen.value = true
@@ -161,9 +165,11 @@ onMounted(async () => {
     </div>
 
     <template #footer-left>
-      <button type="button" class="text-sm text-slate-600 underline cursor-pointer" @click="resetAll">
-        Restablecer todo
-      </button>
+      <BaseButton label="Volver" variant="secondary" class="w-[160px] gap-[10px]" @click="goToRegister">
+        <template #iconLeft>
+          <IconArrowLeft class="h-6 w-6" />
+        </template>
+      </BaseButton>
     </template>
 
     <template #footer-right>

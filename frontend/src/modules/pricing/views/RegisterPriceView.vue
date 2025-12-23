@@ -12,7 +12,7 @@ import { computed, onMounted, ref, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { usePricingStore } from '@/stores/pricing.store';
 import ConfirmPriceChangeModal from '@/components/modals/ConfirmPriceChangeModal.vue';
-import HeaderBar from '@/components/layout/HeaderBar.vue';
+import FooterBar from '@/components/layout/FooterBar.vue';
 
 const pricingStore = usePricingStore()
 onMounted(() => pricingStore.loadPriceLists())
@@ -176,8 +176,8 @@ const listaSeleccionada = computed(() => {
 </script>
 
 <template>
-  <section class="bg-[#F4F4F4] h-screen w-screen flex flex-col justify-center items-center place-content-between">
-    <main class="h-full">
+  <section class="bg-[#F4F4F4] h-full w-full flex flex-col">
+    <main class="flex-1 min-h-0 overflow-auto flex flex-col items-center">
       <div class="gap-[20px]">
         <h1>Cambio de precio de artículo</h1>
         <form action="" class="gap-[20px] flex flex-col">
@@ -270,19 +270,20 @@ const listaSeleccionada = computed(() => {
       </div>
     </main>
 
-    <footer class="flex flex-col border-t border-t-black gap-[30px] w-full h-[180px] justify-center items-center">
-      <div class="flex flex-row gap-[30px]">
-        <BaseButton label="Borrar todo" variant="outline" class="w-[250px]" />
-        <BaseButton label="Continuar" variant="accept" class="w-[250px]" @click="onContinuar" />
-      </div>
+    <FooterBar>
+      <template #center>
+        <div class="flex flex-col justify-center items-center gap-[10px]">
+          <div class="flex flex-row">
+            <BaseButton label="Continuar" class="w-[200px] h-[40px]" @click="confirmOpen = true"/>
+          </div>
 
-      <div class="flex flex-row justify-center items-center gap-[10px]">
-        <h1 class="text-sm text-slate-500">
-          Varias listas
-        </h1>
-        <BaseSwitch v-model="variasListas" />
-      </div>
-    </footer>
+          <div class="flex flex-row justify-center items-center gap-[10px]">
+            <h1 class="text-sm text-slate-500">Varias listas</h1>
+            <BaseSwitch v-model="variasListas" />
+          </div>
+        </div>
+      </template>
+    </FooterBar>
 
     <!-- Modal de confirmación -->
     <ConfirmPriceChangeModal v-model:open="confirmOpen" :listName="listaSeleccionada" :prevPrice="precioAnterior"

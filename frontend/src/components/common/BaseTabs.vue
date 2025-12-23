@@ -6,7 +6,7 @@
         :key="tab.value"
         type="button"
         class="flex-1 rounded-lg px-4 py-3 text-sm font-semibold transition
-               focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2"
+               focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 cursor-pointer"
         :class="tabClasses(tab.value)"
         @click="select(tab.value)"
       >
