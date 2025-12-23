@@ -1,4 +1,6 @@
-@import "tailwindcss";
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
 html, body, #app {
   height: 100%;
@@ -6,19 +8,19 @@ html, body, #app {
 }
 
 body {
-  overflow: hidden
+  overflow: hidden;
 }
 
 @layer base {
   h1 {
-    @apply text-[24px] font-semibold ;
+    @apply text-[24px] font-semibold;
   }
 
   label {
     font-family: Inter, system-ui, sans-serif;
     font-size: 14px;
     font-weight: 400;
-    color: #545F71
+    color: #545F71;
   }
 }
 

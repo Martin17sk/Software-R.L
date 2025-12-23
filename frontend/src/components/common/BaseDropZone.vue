@@ -7,27 +7,13 @@
       {{ subtitle }}
     </div>
 
-    <div
-      class="mt-4 rounded-xl border-2 border-dashed px-6 py-8 text-center transition
-             flex flex-col items-center justify-center gap-1"
-      :class="dropzoneClasses"
-      @dragenter.prevent="onDragEnter"
-      @dragover.prevent="onDragOver"
-      @dragleave.prevent="onDragLeave"
-      @drop.prevent="onDrop"
-      @click="openPicker"
-      role="button"
-      tabindex="0"
-      @keydown.enter.prevent="openPicker"
-      @keydown.space.prevent="openPicker"
-    >
+    <div class="mt-4 rounded-xl border-2 border-dashed px-6 py-8 text-center transition
+             flex flex-col items-center justify-center gap-1" :class="dropzoneClasses" @dragenter.prevent="onDragEnter"
+      @dragover.prevent="onDragOver" @dragleave.prevent="onDragLeave" @drop.prevent="onDrop" @click="openPicker"
+      role="button" tabindex="0" @keydown.enter.prevent="openPicker" @keydown.space.prevent="openPicker">
       <div class="text-sm text-slate-900">
         <span>Drop file or</span>
-        <button
-          type="button"
-          class="ml-1 font-semibold underline underline-offset-2"
-          @click.stop="openPicker"
-        >
+        <button type="button" class="ml-1 font-semibold underline underline-offset-2" @click.stop="openPicker">
           Browse
         </button>
       </div>
@@ -40,13 +26,7 @@
         Seleccionado: <span class="font-medium">{{ fileName }}</span>
       </div>
 
-      <input
-        ref="inputRef"
-        type="file"
-        class="hidden"
-        :accept="accept"
-        @change="onPick"
-      />
+      <input ref="inputRef" type="file" class="hidden" :accept="accept" @change="onPick" />
     </div>
 
     <p v-if="error" class="mt-2 text-xs text-red-600">
@@ -56,6 +36,7 @@
 </template>
 
 <script setup>
+import { preview } from 'vite'
 import { computed, ref } from 'vue'
 
 const props = defineProps({
@@ -66,7 +47,7 @@ const props = defineProps({
   file: { type: Object, default: null }, // File | null
 
   // por defecto solo .xls (puedes ampliar a .xlsx)
-  accept: { type: String, default: '.xls' },
+  accept: { type: String, default: '.xls,.xlsx' },
 
   // texto bajo “Drop file or Browse”
   formatHint: { type: String, default: 'Formato: xls, xlsx' },

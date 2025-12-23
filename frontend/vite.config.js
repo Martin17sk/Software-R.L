@@ -2,16 +2,12 @@ import { fileURLToPath, URL } from 'node:url'
 
 import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
-import vueDevTools from 'vite-plugin-vue-devtools'
-import tailwindcss from '@tailwindcss/vite'
 import svgLoader from 'vite-svg-loader'
 
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [
     vue(),
-    tailwindcss(),   // ⬅ aquí enganchas Tailwind v4
-    vueDevTools(),
     svgLoader()
   ],
   resolve: {
@@ -26,4 +22,7 @@ export default defineConfig({
       '@services': fileURLToPath(new URL('./src/modules', import.meta.url)),
     },
   },
+  css: {
+    transformer: 'postcss',
+  }
 })

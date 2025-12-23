@@ -65,14 +65,6 @@ const lista = ref('');
 
 const duplicatedListError = ref('');
 
-function goToHistory() {
-  // router.push('/historial')
-}
-
-function goToSettings() {
-  // abrir modal de configuración
-}
-
 const priceRows = ref([
   { id: crypto.randomUUID(), lista: '', precioAnterior: '$5.000', precioNuevo: '', nota: '', showNota: false },
 ]);
@@ -274,7 +266,7 @@ const listaSeleccionada = computed(() => {
       <template #center>
         <div class="flex flex-col justify-center items-center gap-[10px]">
           <div class="flex flex-row">
-            <BaseButton label="Continuar" class="w-[200px] h-[40px]" @click="confirmOpen = true"/>
+            <BaseButton label="Continuar" class="w-[200px] h-[40px]" @click="confirmOpen = true" />
           </div>
 
           <div class="flex flex-row justify-center items-center gap-[10px]">

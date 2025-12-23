@@ -1,5 +1,5 @@
 <script setup>
-import { computed, onMounted, ref } from 'vue'
+import { onMounted, ref } from 'vue'
 import SettingsLayout from '@/components/layout/SettingsLayout.vue'
 import BaseButton from '@/components/common/BaseButton.vue'
 import BaseInputText from '@/components/common/BaseInputText.vue'
@@ -40,10 +40,6 @@ const activeId = ref('general')
 
 // ejemplo de estado
 const deleteWindowValue = ref('24')
-
-function resetAll() {
-  deleteWindowValue.value = '24'
-}
 
 function save() {
   // llamar API
