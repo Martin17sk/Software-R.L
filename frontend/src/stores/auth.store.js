@@ -16,7 +16,7 @@ export const useAuthStore = defineStore("auth", {
     async init() {
       this.loading = true;
       try {
-        const res = await api.get("/auth/me");
+        const res = await api.get("/me");
         this.user = res.data
       } catch (err) {
         // No hay sesion valida

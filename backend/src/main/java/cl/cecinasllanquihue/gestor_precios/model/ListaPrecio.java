@@ -16,7 +16,7 @@ public class ListaPrecio {
     @Column(name = "lispre_nombre", nullable = false, length = 100)
     private String nombre;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "lispre_sistema_id")
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "lispre_sistema_id", nullable = false)
     private Sistema sistema;
 }

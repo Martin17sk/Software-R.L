@@ -1,5 +1,5 @@
 <script setup>
-import { ref } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import SettingsLayout from '@/components/layout/SettingsLayout.vue'
 import BaseButton from '@/components/common/BaseButton.vue'
 import BaseInputText from '@/components/common/BaseInputText.vue'
@@ -7,6 +7,25 @@ import IconChevronDown from '@/icons/chevron-down.svg?component'
 import IconPlus from '@/icons/plus.svg?component'
 import IconPencilSquare from '@/icons/pencil-square.svg?component'
 import AddPriceListModal from '@/components/modals/AddPriceListModal.vue'
+import { fetchSystems } from '../services/configApi'
+import api from '@/services/axios'
+
+const addListOpen = ref(false)
+const addListSubmitting = ref(false)
+const addListError = ref('')
+
+const systems = ref([])
+const listas = ref([])
+
+async function loadSystems() {
+  const res = await fetchSystems()
+  systems.value = res
+}
+
+async function loadListas() {
+  const res = await api.get('/listas-precio')
+  listas.value = res.data
+}
 
 const sections = [
   { id: 'general', label: 'General' },
@@ -28,16 +47,32 @@ function save() {
   // llamar API
 }
 
-const addListOpen = ref(false)
+
 
 function openAddList() {
   addListOpen.value = true
 }
 
-function onAddList(name) {
-  // llamar API para crear lista
-  console.log('crear lista:', name)
+async function onAddList(payload) {
+  // payload debe venir como: { nombre, sistemaId }
+  addListError.value = ''
+  addListSubmitting.value = true
+
+  try {
+    await api.post('/listas-precio', payload)
+    addListOpen.value = false
+    await loadListas()
+  } catch (e) {
+    addListError.value = e?.response?.data?.message || (typeof e?.response?.data === 'string' ? e.response.data : '') || 'No se pudo crear la lista'
+    console.error(e)
+  } finally {
+    addListSubmitting.value = false
+  }
 }
+
+onMounted(async () => {
+  await Promise.all([loadSystems(), loadListas()])
+})
 
 </script>
 
@@ -135,6 +170,6 @@ function onAddList(name) {
       <BaseButton label="Guardar cambios" variant="accept" class="w-[160px]" @click="save" />
     </template>
 
-    <AddPriceListModal v-model:open="addListOpen" @confirm="onAddList" />
+    <AddPriceListModal v-model:open="addListOpen" :server-error="addListError" :submitting="addListSubmitting" @confirm="onAddList" />
   </SettingsLayout>
 </template>

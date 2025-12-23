@@ -8,16 +8,16 @@ import BaseSwitch from '@/components/common/BaseSwitch.vue';
 
 import Lock from '@/icons/Lock.png';
 
-import { computed, ref, watch } from 'vue';
+import { computed, onMounted, ref, watch } from 'vue';
+import { usePricingStore } from '@/stores/pricing.store';
 import ConfirmPriceChangeModal from '@/components/modals/ConfirmPriceChangeModal.vue';
 import HeaderBar from '@/components/layout/HeaderBar.vue';
 
+const pricingStore = usePricingStore()
+onMounted(() => pricingStore.loadPriceLists())
+
 // --- Listas de precios (Traer de BD) ---
-const opciones = [
-  { value: 1, label: 'Lista de Precios 1' },
-  { value: 2, label: 'Lista de Precios 2' },
-  { value: 3, label: 'Lista de Precios 3' },
-]
+const opciones = computed(() => pricingStore.options)
 
 const tab = ref('precio');
 
@@ -49,7 +49,7 @@ function addRow() {
   priceRows.value.push({ id: crypto.randomUUID(), lista: '', precioAnterior: '$5.000', precioNuevo: '', nota: '', showNota: false });
 }
 
-const canAddRow = computed(() => priceRows.value.length < opciones.length);
+const canAddRow = computed(() => priceRows.value.length < opciones.value.length);
 
 function removeRow(id) {
   if (priceRows.value.length <= 1) return
@@ -94,7 +94,7 @@ function optionForRow(row) {
       .filter(v => v && v !== 'null' && v !== 'undefined')
   )
 
-  return opciones.map(o => ({
+  return opciones.value.map(o => ({
     ...o,
     disabled: used.has(String(o.value))
   }));
@@ -139,7 +139,7 @@ const precioAnterior = ref(5000);
 const precioNuevo = ref(6000);
 
 const listaSeleccionada = computed(() => {
-  return opciones.find(o => o.value === lista.value)?.label ?? '';
+  return opciones.value.find(o => o.value === lista.value)?.label ?? '';
 });
 </script>
 

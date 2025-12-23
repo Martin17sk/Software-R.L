@@ -21,20 +21,16 @@ public class CambioPrecioController {
         this.cambioPrecioService = cambioPrecioService;
     }
 
-    @PostMapping("/cambios")
+    @PostMapping("/cambio-precio")
     public ResponseEntity<RegistrarCambioPrecioResponseDTO> registrarCambioPrecio(
             @RequestBody RegistrarCambioPrecioRequestDTO request) {
-        RegistrarCambioPrecioResponseDTO response = cambioPrecioService
-                .registrarCambioPrecio(request);
-        return ResponseEntity.ok(response);
+        return ResponseEntity.ok(cambioPrecioService.registrarCambioPrecio(request));
     }
 
-    @PostMapping("/cambios/multiples")
+    @PostMapping("/cambio-precio/multiple")
     public ResponseEntity<RegistrarCambioPrecioMultipleResponseDTO> registrarCambioPrecioMultiple(
             @RequestBody RegistrarCambioPrecioMultipleRequestDTO request
     ) {
-        RegistrarCambioPrecioMultipleResponseDTO response =
-                cambioPrecioService.registrarCambioPrecioMultiple(request);
-        return ResponseEntity.ok(response);
+        return ResponseEntity.ok(cambioPrecioService.registrarCambioPrecioMultiple(request));
     }
 }
