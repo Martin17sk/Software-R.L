@@ -16,31 +16,30 @@ public interface HistorialRepository extends JpaRepository<Historial, Integer> {
     List<Historial> findByArticulo_CodigoOrderByFechaHoraDesc(String codigoArticulo);
 
     // Para filtrar por lista
-    List<Historial> findByListaPrecioIdOrderByFechaHoraDesc(Integer listaPrecioId);
+    List<Historial> findByListaPrecio_IdOrderByFechaHoraDesc(Integer listaPrecioId);
 
-    // Historial paginado por artículo + lista
+    // Historial paginado por artículo
     Page<Historial> findByArticulo_CodigoAndListaPrecio_Id(
             String codigoArticulo,
             Integer listaPrecioId,
             Pageable pageable
     );
 
-    List<Historial> findByArticulo_CodigoAndListaPrecio_IdOrderByFechaHoraDesc(
-            String articuloCodigo,
-            Integer listaPrecioId
-    );
-
     @Query("""
-            SELECT h
-            FROM Historial h
-            WHERE (:search IS NULL OR :search = '' 
-               OR LOWER(h.articulo.codigo) LIKE LOWER(CONCAT('%', :search, '%'))
-               OR LOWER(h.articulo.nombre) LIKE LOWER(CONCAT('%', :search, '%'))
-               OR LOWER(h.listaPrecio.nombre) LIKE LOWER(CONCAT('%', :search, '%'))
-               OR LOWER(h.listaPrecio.sistema.nombre) LIKE LOWER(CONCAT('%', :search, '%'))
-               OR LOWER(h.usuario.nombre) LIKE LOWER(CONCAT('%', :search, '%'))
-            )
-            """)
+    SELECT h
+    FROM Historial h
+    JOIN h.articulo a
+    JOIN h.listaPrecio lp
+    JOIN lp.sistema s
+    JOIN h.usuario u
+    WHERE (:search IS NULL OR :search = ''
+       OR LOWER(a.codigo) LIKE LOWER(CONCAT('%', :search, '%'))
+       OR LOWER(a.nombre) LIKE LOWER(CONCAT('%', :search, '%'))
+       OR LOWER(lp.nombre) LIKE LOWER(CONCAT('%', :search, '%'))
+       OR LOWER(s.nombre) LIKE LOWER(CONCAT('%', :search, '%'))
+       OR LOWER(u.nombre) LIKE LOWER(CONCAT('%', :search, '%'))
+    )
+    """)
     Page<Historial> buscarConFiltro(
             @Param("search") String search,
             Pageable pageable

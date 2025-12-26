@@ -22,7 +22,4 @@ export default defineConfig({
       '@services': fileURLToPath(new URL('./src/modules', import.meta.url)),
     },
   },
-  css: {
-    transformer: 'postcss',
-  }
 })

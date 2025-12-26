@@ -5,6 +5,7 @@ import cl.cecinasllanquihue.gestor_precios.dto.RegistrarCambioPrecioMultipleResp
 import cl.cecinasllanquihue.gestor_precios.dto.RegistrarCambioPrecioRequestDTO;
 import cl.cecinasllanquihue.gestor_precios.dto.RegistrarCambioPrecioResponseDTO;
 import cl.cecinasllanquihue.gestor_precios.service.CambioPrecioService;
+import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -21,15 +22,16 @@ public class CambioPrecioController {
         this.cambioPrecioService = cambioPrecioService;
     }
 
-    @PostMapping("/cambio-precio")
+    @PostMapping("/cambio")
     public ResponseEntity<RegistrarCambioPrecioResponseDTO> registrarCambioPrecio(
-            @RequestBody RegistrarCambioPrecioRequestDTO request) {
+            @Valid @RequestBody RegistrarCambioPrecioRequestDTO request
+    ) {
         return ResponseEntity.ok(cambioPrecioService.registrarCambioPrecio(request));
     }
 
-    @PostMapping("/cambio-precio/multiple")
+    @PostMapping("/cambio/multiple")
     public ResponseEntity<RegistrarCambioPrecioMultipleResponseDTO> registrarCambioPrecioMultiple(
-            @RequestBody RegistrarCambioPrecioMultipleRequestDTO request
+            @Valid @RequestBody RegistrarCambioPrecioMultipleRequestDTO request
     ) {
         return ResponseEntity.ok(cambioPrecioService.registrarCambioPrecioMultiple(request));
     }

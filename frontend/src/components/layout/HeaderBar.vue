@@ -2,12 +2,9 @@
 import BaseIconButton from "@/components/common/BaseIconButton.vue";
 import IconHistory from "@/icons/clock.svg";
 import IconSettings from "@/icons/settings.svg";
-import IconUser from '@/icons/user.svg'
-import { useAuthStore } from "@/stores/auth.store";
 import { useRouter } from "vue-router";
 import UserMenuDropdown from "./UserMenuDropdown.vue";
 
-const auth = useAuthStore()
 const router = useRouter();
 
 function goToHistory() {

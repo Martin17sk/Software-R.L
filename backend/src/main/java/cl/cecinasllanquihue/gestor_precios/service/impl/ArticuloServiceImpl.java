@@ -1,9 +1,9 @@
 package cl.cecinasllanquihue.gestor_precios.service.impl;
 
 import cl.cecinasllanquihue.gestor_precios.dto.ArticuloConPrecioActualDTO;
+import cl.cecinasllanquihue.gestor_precios.dto.ArticuloOptionDTO;
 import cl.cecinasllanquihue.gestor_precios.model.Articulo;
 import cl.cecinasllanquihue.gestor_precios.repository.ArticuloRepository;
-import cl.cecinasllanquihue.gestor_precios.repository.ListaPrecioRepository;
 import cl.cecinasllanquihue.gestor_precios.service.ArticuloService;
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.stereotype.Service;
@@ -14,18 +14,9 @@ import java.util.List;
 public class ArticuloServiceImpl implements ArticuloService {
 
     private final ArticuloRepository articuloRepository;
-    private final ListaPrecioRepository listaPrecioRepository;
 
-    public ArticuloServiceImpl(ArticuloRepository articuloRepository,
-                               ListaPrecioRepository listaPrecioRepository) {
+    public ArticuloServiceImpl(ArticuloRepository articuloRepository) {
         this.articuloRepository = articuloRepository;
-        this.listaPrecioRepository = listaPrecioRepository;
-    }
-
-
-    @Override
-    public List<String> listarNombres() {
-        return articuloRepository.findAllNames();
     }
 
     @Override
@@ -39,8 +30,7 @@ public class ArticuloServiceImpl implements ArticuloService {
             throw new IllegalArgumentException("ART_E002: listaPrecioId obligatorio");
         }
 
-        Integer listaId = resolveListaPrecioId(listaPrecioId);
-        return articuloRepository.buscarConPrecioPorNombre(query, listaId);
+        return articuloRepository.buscarConPrecioPorNombre(query, listaPrecioId);
     }
 
     @Override
@@ -55,8 +45,6 @@ public class ArticuloServiceImpl implements ArticuloService {
         }
 
         return articuloRepository.buscarConPrecioPorCodigo(codigo, listaPrecioId)
-                .stream()
-                .findFirst()
                 .orElseThrow(() -> new EntityNotFoundException("ART_E005: artículo no encontrado en esa lista"));
     }
 
@@ -94,15 +82,8 @@ public class ArticuloServiceImpl implements ArticuloService {
         return articuloRepository.save(existente);
     }
 
-    public Integer resolveListaPrecioId(Integer listaPrecioId) {
-
-        if (listaPrecioId != null) {
-            if (!listaPrecioRepository.existsById(listaPrecioId)) {
-                throw new IllegalStateException("ART_E003: lista de precio inválida");
-            }
-            return listaPrecioId;
-        }
-        // TODO: obtener desde parámetros; por ahora hardcodear
-        return 1;
+    @Override
+    public List<ArticuloOptionDTO> listarOptions() {
+        return articuloRepository.findAllOptions();
     }
 }

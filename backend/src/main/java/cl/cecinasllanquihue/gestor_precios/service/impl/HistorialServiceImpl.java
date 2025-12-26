@@ -8,7 +8,9 @@ import cl.cecinasllanquihue.gestor_precios.service.ParametroService;
 import jakarta.persistence.EntityNotFoundException;
 
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -36,10 +38,12 @@ public class HistorialServiceImpl implements HistorialService {
 
     @Override
     public List<HistorialDTO> buscar(String codigoArticulo, Integer listaPrecioId) {
-        List<Historial> lista = historialRepository
-                .findByArticulo_CodigoAndListaPrecio_IdOrderByFechaHoraDesc(codigoArticulo, listaPrecioId);
+        var pageable = PageRequest.of(0, 200, Sort.by(Sort.Direction.DESC, "fechaHora"));
 
-        return lista.stream().map(this::toDTO).toList();
+        Page<Historial> page = historialRepository
+                .findByArticulo_CodigoAndListaPrecio_Id(codigoArticulo, listaPrecioId, pageable);
+
+        return page.getContent().stream().map(this::toDTO).toList();
     }
 
     @Override

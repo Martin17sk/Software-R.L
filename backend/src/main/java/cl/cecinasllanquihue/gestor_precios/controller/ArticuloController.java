@@ -1,6 +1,7 @@
 package cl.cecinasllanquihue.gestor_precios.controller;
 
 import cl.cecinasllanquihue.gestor_precios.dto.ArticuloConPrecioActualDTO;
+import cl.cecinasllanquihue.gestor_precios.dto.ArticuloOptionDTO;
 import cl.cecinasllanquihue.gestor_precios.model.Articulo;
 import cl.cecinasllanquihue.gestor_precios.service.ArticuloService;
 import org.springframework.http.ResponseEntity;
@@ -21,7 +22,7 @@ public class ArticuloController {
     @GetMapping("/buscar")
     public ResponseEntity<List<ArticuloConPrecioActualDTO>> buscar(
             @RequestParam String q,
-            @RequestParam(required = false) Integer listaPrecioId
+            @RequestParam Integer listaPrecioId
     ) {
         return ResponseEntity.ok(
                 articuloService.buscarPorNombre(q, listaPrecioId)
@@ -31,7 +32,7 @@ public class ArticuloController {
     @GetMapping("/{codigo}")
     public ResponseEntity<ArticuloConPrecioActualDTO> obtenerPorCodigo(
             @PathVariable String codigo,
-            @RequestParam(required = false) Integer listaPrecioId
+            @RequestParam Integer listaPrecioId
     ) {
         ArticuloConPrecioActualDTO dto = articuloService.obtenerPorCodigoYLista(codigo, listaPrecioId);
         return ResponseEntity.ok(dto);
@@ -52,8 +53,8 @@ public class ArticuloController {
         return ResponseEntity.ok(actualizado);
     }
 
-    @GetMapping("/nombres")
-    public ResponseEntity<List<String>> listarNombres() {
-        return ResponseEntity.ok(articuloService.listarNombres());
+    @GetMapping("/options")
+    public ResponseEntity<List<ArticuloOptionDTO>> listarOptions() {
+        return ResponseEntity.ok(articuloService.listarOptions());
     }
 }

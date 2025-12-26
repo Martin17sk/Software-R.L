@@ -36,7 +36,6 @@
 </template>
 
 <script setup>
-import { preview } from 'vite'
 import { computed, ref } from 'vue'
 
 const props = defineProps({

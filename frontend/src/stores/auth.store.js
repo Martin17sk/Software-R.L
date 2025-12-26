@@ -21,6 +21,7 @@ export const useAuthStore = defineStore("auth", {
       } catch (err) {
         // No hay sesion valida
         this.user = null
+        console.log(err)
       } finally {
         this.loading = false
       }

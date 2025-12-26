@@ -3,13 +3,11 @@ import BaseButton from '@/components/common/BaseButton.vue';
 import BaseInputText from '@/components/common/BaseInputText.vue';
 import BaseDropdown from '@/components/common/BaseDropdown.vue';
 import BaseTextarea from '@/components/common/BaseTextarea.vue';
-import BaseTabs from '@/components/common/BaseTabs.vue';
 import BaseSwitch from '@/components/common/BaseSwitch.vue';
 
 import Lock from '@/icons/Lock.png';
 
 import { computed, onMounted, ref, watch } from 'vue';
-import { useRoute, useRouter } from 'vue-router';
 import { usePricingStore } from '@/stores/pricing.store';
 import ConfirmPriceChangeModal from '@/components/modals/ConfirmPriceChangeModal.vue';
 import FooterBar from '@/components/layout/FooterBar.vue';
@@ -17,46 +15,7 @@ import FooterBar from '@/components/layout/FooterBar.vue';
 const pricingStore = usePricingStore()
 onMounted(() => pricingStore.loadPriceLists())
 
-const router = useRouter()
-const route = useRoute()
-
-// --- Listas de precios (Traer de BD) ---
 const opciones = computed(() => pricingStore.options)
-
-const tab = ref('precio');
-
-const tabToRouteName = {
-  precio: 'register-price',
-  comparar: 'compare-lists',
-};
-
-function syncTabWithRoute() {
-  if (route.name === 'compare-lists') {
-    tab.value = 'comparar';
-  } else {
-    tab.value = 'precio';
-  }
-}
-
-syncTabWithRoute();
-
-watch(
-  () => route.name,
-  () => {
-    syncTabWithRoute();
-  },
-);
-
-watch(tab, (value) => {
-  const targetRoute = tabToRouteName[value];
-  if (!targetRoute || targetRoute === route.name) return;
-  router.push({ name: targetRoute });
-});
-
-const tabs = [
-  { value: 'precio', label: 'Cambio de precio de artículo' },
-  { value: 'comparar', label: 'Comparar listas de precios' },
-]
 
 const notaSimple = ref('');
 
@@ -124,24 +83,10 @@ function optionForRow(row) {
   }));
 }
 
-function validateUniqueLists() {
-  const chosen = priceRows.value.map(r => String(r.lista)).filter(v => v);
-  return new Set(chosen).size === chosen.length;
-}
-
 const canRemove = computed(() => priceRows.value.length > 1);
 
 // --- Modal ---
 const confirmOpen = ref(false);
-
-function onContinuar() {
-  if (variasListas.value && !validateUniqueLists) {
-    alert('No puedes repetir la misma lista en varias filas.')
-    return
-  }
-
-  confirmOpen.value = true;
-}
 
 function onConfirm() {
   confirmOpen.value = false;

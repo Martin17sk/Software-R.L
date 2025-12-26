@@ -1,5 +1,5 @@
 <script setup>
-import { onMounted, ref } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
 import SettingsLayout from '@/components/layout/SettingsLayout.vue'
 import BaseButton from '@/components/common/BaseButton.vue'
 import BaseInputText from '@/components/common/BaseInputText.vue'
@@ -8,26 +8,31 @@ import IconPlus from '@/icons/plus.svg?component'
 import IconPencilSquare from '@/icons/pencil-square.svg?component'
 import IconArrowLeft from '@/icons/arrow-left.svg'
 import AddPriceListModal from '@/components/modals/AddPriceListModal.vue'
-import { fetchSystems } from '../services/configApi'
 import api from '@/services/axios'
-import router from '@/router'
+import { useRouter } from 'vue-router'
+import { useParameters } from '../composables/useParameters'
+import BaseDropdown from '@/components/common/BaseDropdown.vue'
+
+const router = useRouter()
 
 const addListOpen = ref(false)
 const addListSubmitting = ref(false)
 const addListError = ref('')
 
-const systems = ref([])
-const listas = ref([])
+const { systems, listasPrecio, articulos, loading, error, loadAll } = useParameters()
 
-async function loadSystems() {
-  const res = await fetchSystems()
-  systems.value = res
-}
+const listasOpen = ref(false)
+const articulosOpen = ref(false)
 
-async function loadListas() {
-  const res = await api.get('/listas-precio')
-  listas.value = res.data
-}
+const listasOptions = computed(() =>
+  (listasPrecio.value ?? []).map(lp => ({ value: lp.id, label: lp.nombre }))
+)
+
+const articulosOptions = computed(() =>
+  (articulos.value ?? []).map(a => ({ value: a.codigo, label: `${a.codigo} — ${a.nombre}` }))
+)
+const selectedArticuloCodigo = ref(null)
+
 
 const sections = [
   { id: 'general', label: 'General' },
@@ -45,8 +50,8 @@ function save() {
   // llamar API
 }
 
-function goToRegister () {
-  router.push({name: 'register-price'})
+function goToRegister() {
+  router.push({ name: 'register-price' })
 }
 
 function openAddList() {
@@ -61,7 +66,7 @@ async function onAddList(payload) {
   try {
     await api.post('/listas-precio', payload)
     addListOpen.value = false
-    await loadListas()
+    await loadAll()
   } catch (e) {
     addListError.value = e?.response?.data?.message || (typeof e?.response?.data === 'string' ? e.response.data : '') || 'No se pudo crear la lista'
     console.error(e)
@@ -70,8 +75,17 @@ async function onAddList(payload) {
   }
 }
 
+function toggleListas() { listasOpen.value = !listasOpen.value }
+
+function toggleArticulos() { articulosOpen.value = !articulosOpen.value }
+
+watch(activeId, () => {
+  listasOpen.value = false
+  articulosOpen.value = false
+})
+
 onMounted(async () => {
-  await Promise.all([loadSystems(), loadListas()])
+  await loadAll()
 })
 
 </script>
@@ -79,6 +93,7 @@ onMounted(async () => {
 <template>
   <SettingsLayout v-model:activeId="activeId" :sections="sections" title="Configuración">
     <!-- Sección: General -->
+    <p v-if="error" class="text-sm text-red-600">{{ error }}</p>
     <div v-if="activeId === 'general'" class="max-w-[700px]">
       <h2 class="text-base font-semibold text-slate-900">General</h2>
       <p class="text-sm text-slate-500 mt-1">Ajusta parámetros globales</p>
@@ -93,6 +108,7 @@ onMounted(async () => {
     </div>
 
     <!-- Sección: Listas -->
+    <p v-if="error" class="text-sm text-red-600">{{ error }}</p>
     <div v-else-if="activeId === 'listas'" class="flex flex-col max-w-[700px] gap-[20px]">
       <div class="flex flex-col">
         <h2 class="text-base font-semibold text-slate-900">Listas de precios</h2>
@@ -100,11 +116,20 @@ onMounted(async () => {
       </div>
 
       <div class="flex flex-col justify-center items-start gap-[10px]">
-        <BaseButton label="Ver listas de precios" variant="ghost" class="gap-[10px] pt-0 pr-0 pb-0 pl-0">
+        <BaseButton label="Ver listas de precios" variant="ghost" class="gap-[10px] pt-0 pr-0 pb-0 pl-0"
+          @click="toggleListas">
           <template #iconRight>
-            <IconChevronDown class="h-4 w-4 text-black" />
+            <IconChevronDown class="h-4 w-4 text-black" :class="listasOpen ? 'rotate-180' : ''" />
           </template>
         </BaseButton>
+
+        <div v-if="listasOpen" class="w-full">
+          <BaseDropdown label="Listas desde BD" :options="listasOptions" placeholder="Selecciona una lista"
+            :disabled="loading" searchable />
+          <p v-if="!listasOptions.length && !loading" class="text-sm text-slate-500 mt-2"> No hay listas de precio
+            registradas</p>
+        </div>
+
 
         <BaseButton label="Agregar lista de precios" variant="secondary" @click="openAddList">
           <template #iconRight>
@@ -115,6 +140,7 @@ onMounted(async () => {
     </div>
 
     <!-- Sección: Artículos -->
+    <p v-if="error" class="text-sm text-red-600">{{ error }}</p>
     <div v-else-if="activeId === 'articulos'" class="flex flex-col max-w-[700px] gap-[20px]">
       <div class="flex flex-col">
         <h2 class="text-base font-semibold text-slate-900">Artículos</h2>
@@ -122,11 +148,21 @@ onMounted(async () => {
       </div>
 
       <div class="flex flex-col justify-center items-start gap-[10px]">
-        <BaseButton label="Ver artículos" variant="ghost" class="gap-[10px] pt-0 pr-0 pb-0 pl-0">
+        <BaseButton label="Ver artículos" variant="ghost" class="gap-[10px] pt-0 pr-0 pb-0 pl-0"
+          @click="toggleArticulos">
           <template #iconRight>
-            <IconChevronDown class="h-4 w-4 text-black" />
+            <IconChevronDown class="h-4 w-4 text-black" :class="articulosOpen ? 'rotate-180' : ''" />
           </template>
         </BaseButton>
+
+        <div v-if="articulosOpen" class="w-full">
+          <BaseDropdown v-model="selectedArticuloCodigo" label="Articulos desde BD" :options="articulosOptions" placeholder="Selecciona un articulo"
+            :disabled="loading" searchable />
+          <p v-if="!articulosOptions.length && !loading" class="text-sm text-slate-500 mt-2"> No hay articulos
+            registrados
+          </p>
+        </div>
+
 
         <div class="flex flex-row gap-[20px]">
           <BaseButton label="Agregar artículo" variant="secondary" class="gap-[10px]">
@@ -172,6 +208,7 @@ onMounted(async () => {
       <BaseButton label="Guardar cambios" variant="accept" class="w-[160px]" @click="save" />
     </template>
 
-    <AddPriceListModal v-model:open="addListOpen" :server-error="addListError" :submitting="addListSubmitting" @confirm="onAddList" />
+    <AddPriceListModal v-model:open="addListOpen" :server-error="addListError" :submitting="addListSubmitting"
+      @confirm="onAddList" />
   </SettingsLayout>
 </template>

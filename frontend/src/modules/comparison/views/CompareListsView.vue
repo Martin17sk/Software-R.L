@@ -1,12 +1,12 @@
 <script setup>
 import { ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
-import * as XLSX from 'xlsx'
-import BaseDropzone from '@/components/common/BaseDropzone.vue'
+import BaseDropZone from '@/components/common/BaseDropZone.vue'
 import BaseButton from '@/components/common/BaseButton.vue'
 
-import compareIcon from '@/icons/Compare.png'
 import FooterBar from '@/components/layout/FooterBar.vue'
+import IconArrowsRightLeft from '@/icons/arrows-right-left.svg'
+import { useCompareLists } from '../composables/useCompareLists'
 
 const previewLeft = ref(null)
 const previewRight = ref(null)
@@ -18,7 +18,14 @@ const excelFileRight = ref(null)
 
 const router = useRouter()
 
+const { setFileA, setFileB, compare, loading } = useCompareLists()
+
+// TODO: por ahora fijo. Después lo tomas desde tu selector real de sistema.
+const sistemaId = ref(1)
+
 async function readExcelPreview(file) {
+  const XLSX = await import('xlsx')
+
   const data = await file.arrayBuffer()
   const wb = XLSX.read(data, { type: 'array' })
 
@@ -78,8 +85,18 @@ watch(excelFileRight, async (f) => {
   }
 })
 
+async function runCompare() {
+  setFileA(excelFileLeft.value)
+  setFileB(excelFileRight.value)
+
+  const report = await compare(sistemaId.value)
+
+  sessionStorage.setItem('comparisonReport', JSON.stringify(report))
+  router.push({ name: 'compare-result'})
+}
+
 function goToResults() {
-  router.push({ name: 'compare-result' })
+  router.push({ name: 'compare-result'})
 }
 </script>
 
@@ -89,9 +106,9 @@ function goToResults() {
       <div>
         <div class="flex flex-col gap-[20px]">
           <h1>Comparar listas de precios</h1>
-          <div class="flex flex-row gap-[50px] items-center">
+          <div class="flex flex-row gap-[50px] items-start">
             <div class="flex flex-col w-[640px] bg-white p-[24px] rounded-[12px] gap-[32px] shadow-md">
-              <BaseDropzone title="Subir archivo" subtitle="Por favor, suba el archivo en formato .xls o .xlsx"
+              <BaseDropZone title="Subir archivo" subtitle="Por favor, suba el archivo en formato .xls o .xlsx"
                 accept=".xls,.xlsx" v-model:file="excelFileLeft" />
 
               <div v-if="previewErrorLeft" class="text-sm text-red-600">
@@ -130,9 +147,11 @@ function goToResults() {
                 <BaseButton variant="outline" label="Restablecer" class="w-full" @click="resetLeft"/>
               </div>
             </div>
-            <img :src="compareIcon" alt="" class="w-[80px] h-[100px]" />
+            <div class="flex h-full items-center">
+              <IconArrowsRightLeft class="w-24 h-24"/>
+            </div>
             <div class="flex flex-col w-[640px] bg-white p-[24px] rounded-[12px] gap-[32px] shadow-md">
-              <BaseDropzone title="Subir archivo" subtitle="Por favor, suba el archivo en formato .xls o .xlsx"
+              <BaseDropZone title="Subir archivo" subtitle="Por favor, suba el archivo en formato .xls o .xlsx"
                 accept=".xls,.xlsx" v-model:file="excelFileRight" />
 
               <div v-if="previewErrorRight" class="text-sm text-red-600">
@@ -179,7 +198,7 @@ function goToResults() {
     <FooterBar>
       <template #center>
         <BaseButton label="Comparar" variant="accept" class="w-[200px]" :disabled="!excelFileLeft || !excelFileRight"
-          @click="goToResults" />
+          @click="runCompare" />
       </template>
 
       <!-- solo para debug -->

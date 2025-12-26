@@ -24,6 +24,7 @@ async function onSubmit() {
     router.replace({ name: "register-price" })
   } catch (e) {
     errorMessage.value = "Credenciales inválidas"
+    console.log(e)
   }
 }
 </script>

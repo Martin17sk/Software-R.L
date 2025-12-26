@@ -1,5 +1,5 @@
 <script setup>
-import { computed, onMounted, ref, watch } from 'vue';
+import { computed, onMounted } from 'vue';
 import { useAuthStore } from './stores/auth.store';
 import { useRoute, useRouter } from 'vue-router';
 import HeaderBar from './components/layout/HeaderBar.vue';
@@ -15,59 +15,39 @@ onMounted(() => {
 
 const layout = computed(() => route.meta.layout ?? "app")
 
-const tab = ref('precio');
 const tabs = [
-  { value: 'precio', label: 'Cambio de precio de artículo' },
-  { value: 'comparar', label: 'Comparar listas de precios' },
-];
+  { value: 'register-price', label: 'Cambio de precio de artículo' },
+  { value: 'compare-lists', label: 'Comparar listas de precios' },
+]
 
-const tabToRouteName = {
-  precio: 'register-price',
-  comparar: 'compare-lists',
-};
-
-const showTabs = computed(() => ['register-price', 'compare-lists'].includes(String(route.name)));
-
-function syncTabWithRoute() {
-  if (route.name === 'register-price') {
-    tab.value = 'precio'
-    return
-  }
-
-  if (route.name === 'compare-lists') {
-    tab.value = 'comparar';
-  }
-}
-
-syncTabWithRoute();
-
-watch(
-  () => route.name,
-  () => {
-    syncTabWithRoute();
+const activeTab = computed({
+  get() {
+    return String(route.name ?? '')
   },
-);
+  set(name) {
+    if (!showTabs.value) return
+    if (name && name !== route.name) {
+      router.push({ name })
+    }
+  }
+})
 
-watch(tab, (value) => {
-  if (!showTabs.value) return
+const showTabs = computed(() =>
+  ['register-price', 'compare-lists'].includes(String(route.name))
+)
 
-  const targetRoute = tabToRouteName[value];
-  if (!targetRoute || targetRoute === route.name) return;
-  
-  router.push({ name: targetRoute });
-});
 </script>
 
 <template>
   <div class="h-dvh bg-[#F4F4F4] flex flex-col">
     <HeaderBar v-if="layout === 'app' && auth.isAuthenticated">
       <template v-if="showTabs" #center>
-        <BaseTabs v-model="tab" :tabs="tabs" />
+        <BaseTabs v-model="activeTab" :tabs="tabs"/>
       </template>
     </HeaderBar>
 
-    <main class="flex-1 min-h-0 overflow-auto">
-      <router-view />
+    <main class="flex-1 min-h-0 overflow-hidden">
+      <RouterView />
     </main>
   </div>
 </template>

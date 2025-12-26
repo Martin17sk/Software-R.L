@@ -34,8 +34,8 @@ public class CambioPrecioServiceImpl implements CambioPrecioService {
         this.authUser = authUser;
     }
 
-    @Override
     @Transactional
+    @Override
     public RegistrarCambioPrecioResponseDTO registrarCambioPrecio(RegistrarCambioPrecioRequestDTO request){
 
         validarRequest(request);
@@ -53,8 +53,11 @@ public class CambioPrecioServiceImpl implements CambioPrecioService {
         Usuario usuario = authUser.getUsuarioActual();
 
         // Obtener precio actual
-        Optional<PrecioActual> precioActualOpt = precioActualRepository
-                .findByArticulo_CodigoAndListaPrecio_Id(articulo.getCodigo(), listaPrecio.getId());
+        Optional<PrecioActual> precioActualOpt =
+                precioActualRepository.findByArticulo_CodigoAndListaPrecio_Id(
+                        articulo.getCodigo(),
+                        listaPrecio.getId()
+                );
 
         BigDecimal precioAnterior = precioActualOpt
                 .map(PrecioActual::getPrecio)
@@ -100,8 +103,8 @@ public class CambioPrecioServiceImpl implements CambioPrecioService {
         return response;
     }
 
-    @Override
     @Transactional
+    @Override
     public RegistrarCambioPrecioMultipleResponseDTO registrarCambioPrecioMultiple(
             RegistrarCambioPrecioMultipleRequestDTO request
     ) {
