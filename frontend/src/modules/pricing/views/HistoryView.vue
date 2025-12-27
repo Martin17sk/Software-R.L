@@ -5,54 +5,33 @@ import BaseInputText from '@/components/common/BaseInputText.vue';
 import BaseDropdown from '@/components/common/BaseDropdown.vue';
 
 import ArrowLeftIcon from '@/icons/arrow-left.svg'
-import TrashIcon from '@/icons/Trash.png'
+import IconSearch from '@/icons/magnifying-glass.svg'
 
-import { computed, onMounted, onBeforeUnmount, ref } from 'vue';
+import { onMounted, ref, watch } from 'vue';
 import { useRouter } from 'vue-router';
 import FooterBar from '@/components/layout/FooterBar.vue';
+
+import { useHistory } from '../composables/useHistory';
 
 const columns = [
   { key: 'codigo', label: 'Código Artículo' },
   { key: 'nombre', label: 'Nombre Artículo' },
   { key: 'lista', label: 'Lista de precio' },
   { key: 'sistema', label: 'Sistema' },
-  { key: 'precioAnterior', label: 'Precio Actual' },
-  { key: 'precioNuevo', label: 'Precio Nuevo' },
+  { key: 'precioAnterior', label: 'Precio Anterior' },
+  { key: 'precioActual', label: 'Precio Actual' },
   { key: 'fechaCambio', label: 'Fecha de Cambio' },
   { key: 'nota', label: 'Nota' },
   { key: 'responsable', label: 'Responsable' },
 ]
 
-const router = useRouter()
+const { rows, loading, error, load } = useHistory()
 
-const rows = ref([
-  {
-    codigo: 'VV2538',
-    nombre: 'Chorizo parrilleros 250g',
-    lista: '(1) Cob. Osorno a Chiloe',
-    sistema: 'SAP',
-    precioAnterior: 5000,
-    precioActual: 6000,
-    fechaCambio: '2025-12-11 12:45',
-    nota: 'Nota de prueba larga, pero muy muy larga larguisima, pero de verdad muy larga',
-    responsable: 'Nelson',
-  },
-  {
-    codigo: 'VV2497',
-    nombre: 'Longaniza 250g',
-    lista: '(2) Cob. Stgo. a Talca',
-    sistema: 'POS_Web',
-    precioAnterior: 3000,
-    precioActual: 2000,
-    fechaCambio: '2025-12-11 13:41',
-    nota: 'Nota de prueba corta',
-    responsable: 'Nelson',
-  },
-])
+const router = useRouter()
 
 const query = ref('');
 
-const sortKey = ref('nombre:asc');
+const sortKey = ref('fechaCambio:desc');
 
 const sortOptions = [
   { value: 'nombre:asc', label: 'Nombre A-Z' },
@@ -69,83 +48,25 @@ const sortOptions = [
   { value: 'fechaCambio:desc', label: 'Fecha de Cambio Descendente' },
 ]
 
-//Filtro
-const filteredRows = computed(() => {
-  const base = rows.value ?? []
-  const q = query.value.trim().toLowerCase()
-  if (!q) return base;
-
-  return base.filter(r => {
-    const codigo = String(r.codigo ?? '').toLowerCase()
-    const nombre = String(r.nombre ?? '').toLowerCase()
-    return codigo.includes(q) || nombre.includes(q)
-  })
-})
-
-//Ordenar
-const displayedRows = computed(() => {
-  const base = filteredRows.value ?? []
-  const [field, dir] = String(sortKey.value).split(':')
-  const sign = dir === 'desc' ? -1 : 1
-
-  return [...base].sort((a, b) => {
-    const aValue = a?.[field]
-    const bValue = b?.[field]
-
-    //Numeros
-    if (typeof aValue === 'number' && typeof bValue === 'number') {
-      return (aValue - bValue) * sign
-    }
-
-    //Strings
-    return String(aValue ?? '').localeCompare(String(bValue ?? ''), 'es', { sensitivity: 'base' }) * sign
-  })
-})
-
-const now = ref(Date.now());
-let timerId = null;
-
-onMounted(() => {
-  timerId = setInterval(() => {
-    now.value = Date.now();
-  }, 1000);
-});
-
-onBeforeUnmount(() => clearInterval(timerId));
-
-const WINDOW_MS = 24 * 60 * 60 * 1000; // 24 horas
-
-function remainingMs(row) {
-  const created = new Date(row.fechaCambio).getTime();
-  if (Number.isNaN(created)) return 0;
-  return Math.max(0, created + WINDOW_MS - now.value);
-}
-
-function formatHHMMSS(ms) {
-  const totalSeconds = Math.floor(ms / 1000);
-  const hours = String(Math.floor(totalSeconds / 3600)).padStart(2, '0');
-  const minutes = String(Math.floor((totalSeconds % 3600) / 60)).padStart(2, '0');
-  const seconds = String(totalSeconds % 60).padStart(2, '0');
-  return `${hours}:${minutes}:${seconds}`;
-}
-
-function canDelete(row) {
-  return remainingMs(row) > 0;
-}
+let debounceId = null
 
 function goToRegister() {
   router.push({name: 'register-price'})
 }
 
-/* async function onDelete(row) {
-  await http.delete(`/pricing/history/${row.codigo}`);
+function reload() {
+  clearTimeout(debounceId)
+  debounceId = setTimeout(() => {
+    load({ search: query.value, sortKey: sortKey.value, page: 0 })
+  }, 300)
+}
 
-  //Simular espera
-  await new Promise(resolve => setTimeout(resolve, 500));
+watch(query, reload)
+watch(sortKey, () => load({ search: query.value, sortKey: sortKey.value, page: 0 }))
 
-  //Eliminar
-  rows.value = rows.value.filter(r => r !== row);
-}*/
+onMounted(() => {
+  load({ search: query.value, sortKey: sortKey.value, page: 0 })
+})
 
 </script>
 
@@ -155,29 +76,21 @@ function goToRegister() {
       <div class="flex flex-col gap-[50px] w-full max-w-[1200px] px-6 py-6 min-h-0">
         <!-- Toolbar -->
         <div class="flex flex-row gap-[20px] justify-center items-end shrink-0">
-          <BaseInputText label="Buscar" placeholder="Buscar artículo por código o nombre" :icon-right="Search"
-            v-model="query" class="w-[300px]" />
+          <BaseInputText label="Buscar" placeholder="Buscar artículo por código o nombre"
+            v-model="query" class="w-[300px]">
+            <template #iconRight>
+              <IconSearch class="h-4 w-4"/>
+            </template>
+          </BaseInputText>
           <BaseDropdown label="Ordenar por:" :options="sortOptions" v-model="sortKey" />
         </div>
 
         <!-- Divider -->
-        <div class="w-full h-[1px] border-1 border-[#000] border-dotted shrink-0"></div>
+        <div class="w-full border-t border-black border-dotted shrink-0"></div>
 
         <!-- Tabla de resultados -->
-        <div class="flex-1 min-h-0 w-full overflow-hidden">
-          <BaseTable :columns="columns" :rows="displayedRows" :max-height="420">
-            <template #cell-tiempoRestante="{ row }">
-              <div class="flex items-center justify-center gap-3">
-                <span class="tabular-nums" :class="canDelete(row) ? '' : 'text-slate-400'">
-                  {{ formatHHMMSS(remainingMs(row)) }}
-                </span>
-
-                <button v-if="canDelete(row)" type="button" class="p-1 rounded hover:bg-red-50" title="Eliminar" @click="onDelete(row)">
-                  <img :src="TrashIcon" alt="Eliminar" class="w-4 h-4" />
-                </button>
-              </div>
-            </template>
-          </BaseTable>
+        <div class="history-table">
+          <BaseTable :columns="columns" :rows="rows" :max-height="420" />
         </div>
       </div>
     </main>

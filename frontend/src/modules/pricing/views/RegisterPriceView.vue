@@ -5,23 +5,49 @@ import BaseDropdown from '@/components/common/BaseDropdown.vue';
 import BaseTextarea from '@/components/common/BaseTextarea.vue';
 import BaseSwitch from '@/components/common/BaseSwitch.vue';
 
-import Lock from '@/icons/Lock.png';
+import IconLockClosed from '@/icons/lock-closed.svg';
 
 import { computed, onMounted, ref, watch } from 'vue';
 import { usePricingStore } from '@/stores/pricing.store';
 import ConfirmPriceChangeModal from '@/components/modals/ConfirmPriceChangeModal.vue';
 import FooterBar from '@/components/layout/FooterBar.vue';
+import { useRegisterPrice } from '../composables/useRegisterPrice';
+import { useNotifications } from '@/composables/useNotifications';
+import { registrarCambioPrecioMultiple } from '../services/pricingApi';
+
+const { notifySuccess, notifyError } = useNotifications()
+
+const {
+  articleCode,
+  articleName,
+  articleError,
+  currentPrice,
+  selectedPriceList,
+  newPrice,
+  priceError,
+  note,
+  loading,
+  error,
+  fetchArticle,
+  fetchCurrentPrice,
+  registerPrice,
+} = useRegisterPrice()
+
 
 const pricingStore = usePricingStore()
 onMounted(() => pricingStore.loadPriceLists())
 
 const opciones = computed(() => pricingStore.options)
 
-const notaSimple = ref('');
+// Modal: datos reales
+const precioAnteriorModal = computed(() => currentPrice.value ?? null)
+const precioNuevoModal = computed(() => newPrice.value ?? null)
+const listaSeleccionada = computed(() => {
+  return opciones.value.find(o => String(o.value) === String(selectedPriceList.value))?.label ?? ''
+})
 
+// Varias listas
 const variasListas = ref(false);
-const lista = ref('');
-
 const duplicatedListError = ref('');
 
 const priceRows = ref([
@@ -29,7 +55,14 @@ const priceRows = ref([
 ]);
 
 function addRow() {
-  priceRows.value.push({ id: crypto.randomUUID(), lista: '', precioAnterior: '$5.000', precioNuevo: '', nota: '', showNota: false });
+  priceRows.value.push({
+    id: crypto.randomUUID(),
+    lista: '',
+    precioAnterior: '',
+    precioNuevo: '',
+    nota: '',
+    showNota: false
+  });
 }
 
 const canAddRow = computed(() => priceRows.value.length < opciones.value.length);
@@ -41,13 +74,7 @@ function removeRow(id) {
 
 function toggleNota(row) {
   const willOpen = !row.showNota;
-
-  // Cerrar todas las notas
-  priceRows.value.forEach(r => {
-    r.showNota = false;
-  });
-
-  // Abrir o cerrar la nota de la fila actual
+  priceRows.value.forEach(r => (r.showNota = false))
   row.showNota = willOpen;
 }
 
@@ -59,7 +86,6 @@ function setRowLista(row, value) {
   }
 
   const exists = priceRows.value.some(r => r.id !== row.id && String(r.lista) === String(value));
-
   if (exists) {
     duplicatedListError.value = 'No puedes repetir la misma lista en "Varias listas".';
     return
@@ -85,31 +111,113 @@ function optionForRow(row) {
 
 const canRemove = computed(() => priceRows.value.length > 1);
 
-// --- Modal ---
-const confirmOpen = ref(false);
+// Modal
+const confirmOpen = ref(false)
 
-function onConfirm() {
-  confirmOpen.value = false;
-  // Lógica para continuar con el proceso
+function openConfirm() {
+  // Validación mínima antes de abrir modal (para no mostrar modal inútil)
+  if (!articleCode.value) {
+    notifyError('Ingresa el código del artículo')
+    return
+  }
+
+  if (!variasListas.value) {
+    if (!selectedPriceList.value) {
+      notifyError('Selecciona una lista de precios')
+      return
+    }
+
+    if (typeof newPrice.value !== 'number' || newPrice.value <= 0) {
+      notifyError('Ingresa un precio nuevo válido')
+      return
+    }
+  }
+
+  confirmOpen.value = true
 }
 
-watch(variasListas, (v) => {
+function onNewPrice(v) {
+  newPrice.value = v === '' ? null : Number(v)
+}
+
+
+async function onConfirm() {
+  confirmOpen.value = false
+
+  try {
+    if (!variasListas.value) {
+      // modo simple
+      await registerPrice()
+      notifySuccess('Precio registrado correctamente')
+    } else {
+      const cambios = priceRows.value
+        .filter(r => r.lista && r.precioNuevo !== '' && r.precioNuevo !== null && r.precioNuevo !== undefined)
+        .map(r => ({
+          listaPrecioId: Number(r.lista),
+          precioNuevo: Number(r.precioNuevo),
+          observacion: r.nota || null
+        }))
+        .filter(c => c.listaPrecioId && c.precioNuevo > 0)
+
+      if (!cambios.length) {
+        notifyError('Debes ingresar al menos un cambio válido')
+        return
+      }
+
+      await registrarCambioPrecioMultiple({
+        articuloCodigo: articleCode.value,
+        cambios,
+        observacion: note.value?.trim() ? note.value.trim() : null
+      })
+
+      notifySuccess('Cambios registrados correctamente')
+    }
+
+    // Limpieza (cierre visual)
+    selectedPriceList.value = null
+    newPrice.value = null
+    note.value = ''
+
+    // modo multiple:
+    priceRows.value = [
+      { id: crypto.randomUUID(), lista: '', precioAnterior: '', precioNuevo: '', nota: '', showNota: false }
+    ]
+    duplicatedListError.value = ''
+  } catch (e) {
+    const msg =
+      e?.response?.data?.message ||
+      (typeof e?.response?.data === 'string' ? e.response.data : '') ||
+      e?.message ||
+      'Error registrando el precio'
+
+    notifyError(msg)
+    console.error(e)
+  }
+}
+
+async function onArticleCommit() {
+  try {
+    await fetchArticle()
+    await fetchCurrentPrice() // solo si hay lista seleccionada
+  } catch {
+    // fetchArticle ya setea articleError y limpia name/precio
+  }
+}
+
+
+watch(variasListas, v => {
   if (v) {
-    notaSimple.value = ''
+    selectedPriceList.value = null
+    newPrice.value = null
   } else {
     priceRows.value.forEach(r => (r.showNota = false))
   }
 });
 
-
-
-// --- Modal info ---
-const precioAnterior = ref(5000);
-const precioNuevo = ref(6000);
-
-const listaSeleccionada = computed(() => {
-  return opciones.value.find(o => o.value === lista.value)?.label ?? '';
-});
+watch(articleCode, () => {
+  articleName.value = ''
+  articleError.value = ''
+})
 </script>
 
 <template>
@@ -119,22 +227,48 @@ const listaSeleccionada = computed(() => {
         <h1>Cambio de precio de artículo</h1>
         <form action="" class="gap-[20px] flex flex-col">
           <div class="w-full place-content-between flex flex-row gap-4">
-            <BaseInputText label="Códgo artículo" class="w-[125px]" />
-            <BaseInputText label="Nombre artículo" class="w-[400px]" :iconRight="Lock" :disabled="true" />
+
+            <BaseInputText 
+              label="Códgo artículo" 
+              class="w-[125px]" 
+              v-model="articleCode"
+              @keydown.enter.prevent="onArticleCommit"
+              @blur="onArticleCommit" />
+
+            <p v-if="articleError" class="text-xs text-red-600 mt-1">{{ articleError }}</p>
+            <p v-if="priceError" class="text-xs text-red-600 mt-1">{{ priceError }}</p>
+
+
+            <BaseInputText label="Nombre artículo" class="w-[400px]" :modelValue="articleName"
+              :disabled="true">
+              <template #iconRight>
+                <IconLockClosed class="h-4 w-4"/>
+              </template>
+            </BaseInputText>
           </div>
 
           <!-- Modo simple (variasListas = false) -->
           <div v-if="!variasListas" class="w-full flex flex-row place-content-between items-end gap-4">
-            <BaseDropdown label="Lista de precios" placeholder="Seleccionar" v-model="lista" :options="opciones"
-              :searchable="true" class="w-[260px]" />
+            <BaseDropdown label="Lista de precios" placeholder="Seleccionar" v-model="selectedPriceList"
+              :options="opciones" :searchable="true" class="w-[260px]"
+              @update:modelValue="fetchCurrentPrice" />
 
-            <BaseInputText label="Precio anterior" :disabled="true" :modelValue="'$5.000'" class="w-[125px]" />
+            <BaseInputText label="Precio actual" :disabled="true" :modelValue="currentPrice === null ?  '-' : `$${currentPrice}`"
+              class="w-[125px]">
+              <template #iconRight>
+                <IconLockClosed class="h-4 w-4"/>
+              </template>
+            </BaseInputText>
 
-            <BaseInputText label="Precio nuevo" v-model="precioNuevo" class="w-[125px]" />
+            <BaseInputText 
+              label="Precio nuevo" 
+              :modelValue="newPrice ?? ''"
+              @update:modelValue="onNewPrice" 
+              class="w-[125px]" />
           </div>
 
           <div v-if="!variasListas" class="w-full">
-            <BaseTextarea label="Nota (opcional)" placeholder="Escribe tu nota aquí" v-model="notaSimple" :rows="4"
+            <BaseTextarea label="Nota (opcional)" placeholder="Escribe tu nota aquí" v-model="note" :rows="4"
               class="w-full" />
           </div>
 
@@ -211,7 +345,7 @@ const listaSeleccionada = computed(() => {
       <template #center>
         <div class="flex flex-col justify-center items-center gap-[10px]">
           <div class="flex flex-row">
-            <BaseButton label="Continuar" class="w-[200px] h-[40px]" @click="confirmOpen = true" />
+            <BaseButton label="Continuar" class="w-[200px] h-[40px]" @click="openConfirm" />
           </div>
 
           <div class="flex flex-row justify-center items-center gap-[10px]">
@@ -223,7 +357,7 @@ const listaSeleccionada = computed(() => {
     </FooterBar>
 
     <!-- Modal de confirmación -->
-    <ConfirmPriceChangeModal v-model:open="confirmOpen" :listName="listaSeleccionada" :prevPrice="precioAnterior"
-      :nextPrice="precioNuevo" @confirm="onConfirm" />
+    <ConfirmPriceChangeModal v-model:open="confirmOpen" :listName="listaSeleccionada" :prevPrice="precioAnteriorModal"
+      :nextPrice="precioNuevoModal" @confirm="onConfirm" />
   </section>
 </template>

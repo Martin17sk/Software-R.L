@@ -80,7 +80,7 @@ const open = ref(false)
 const root = ref(null)
 
 const selectedLabel = computed(() => {
-    const found = props.options.find(o => o.value === props.modelValue)
+    const found = props.options.find(o => String(o.value) === String(props.modelValue))
     return found?.label ?? ''
 })
 

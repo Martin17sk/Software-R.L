@@ -10,7 +10,12 @@ export async function fetchListasPrecio() {
     return data
 }
 
+export async function fetchArticulos() {
+    const { data } = await api.get('/articulos')
+    return data
+}
+
 export async function fetchArticulosNombres() {
-    const {data} = await api.get('/articulos/nombres')
+    const {data} = await api.get('/articulos/options')
     return data
 }

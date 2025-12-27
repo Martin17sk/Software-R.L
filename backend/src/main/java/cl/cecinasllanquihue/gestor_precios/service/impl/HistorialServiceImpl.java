@@ -83,6 +83,7 @@ public class HistorialServiceImpl implements HistorialService {
         HistorialDTO dto = new HistorialDTO();
         dto.setId(h.getId());
         dto.setArticuloCodigo(h.getArticulo().getCodigo());
+        dto.setArticuloNombre(h.getArticulo().getNombre());
         dto.setListaPrecioId(h.getListaPrecio().getId());
         dto.setListaPrecioNombre(h.getListaPrecio().getNombre());
         dto.setPrecioAnterior(h.getPrecioAnterior());
@@ -90,6 +91,7 @@ public class HistorialServiceImpl implements HistorialService {
         dto.setFechaHora(h.getFechaHora());
         dto.setUsuarioId(h.getUsuario().getId());
         dto.setUsuarioNombre(h.getUsuario().getNombre());
+        dto.setSistemaNombre(h.getListaPrecio().getSistema().getNombre());
         dto.setObservacion(h.getObservacion());
         return dto;
     }

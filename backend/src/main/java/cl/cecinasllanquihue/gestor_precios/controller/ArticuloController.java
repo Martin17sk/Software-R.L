@@ -1,9 +1,10 @@
 package cl.cecinasllanquihue.gestor_precios.controller;
 
-import cl.cecinasllanquihue.gestor_precios.dto.ArticuloConPrecioActualDTO;
-import cl.cecinasllanquihue.gestor_precios.dto.ArticuloOptionDTO;
+import cl.cecinasllanquihue.gestor_precios.dto.*;
 import cl.cecinasllanquihue.gestor_precios.model.Articulo;
+import cl.cecinasllanquihue.gestor_precios.repository.ArticuloRepository;
 import cl.cecinasllanquihue.gestor_precios.service.ArticuloService;
+import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -14,9 +15,11 @@ import java.util.List;
 public class ArticuloController {
 
     private final ArticuloService articuloService;
+    private final ArticuloRepository articuloRepository;
 
-    public ArticuloController(ArticuloService articuloService) {
+    public ArticuloController(ArticuloService articuloService,  ArticuloRepository articuloRepository) {
         this.articuloService = articuloService;
+        this.articuloRepository = articuloRepository;
     }
 
     @GetMapping("/buscar")
@@ -45,16 +48,39 @@ public class ArticuloController {
     }
 
     @PutMapping("/{codigo}")
-    public ResponseEntity<Articulo> actualizarArticulo(
+    public ResponseEntity<ArticuloDTO> actualizarArticulo(
             @PathVariable String codigo,
-            @RequestBody Articulo articulo
+            @Valid @RequestBody ArticuloUpdateDTO body
     ) {
-        Articulo actualizado = articuloService.actualizar(codigo, articulo);
-        return ResponseEntity.ok(actualizado);
+        Articulo actualizado = articuloService.actualizarBasico(codigo, body);
+
+        return ResponseEntity.ok(new ArticuloDTO(
+                actualizado.getCodigo(),
+                actualizado.getNombre(),
+                actualizado.getUnidadMedida()
+        ));
     }
 
     @GetMapping("/options")
     public ResponseEntity<List<ArticuloOptionDTO>> listarOptions() {
         return ResponseEntity.ok(articuloService.listarOptions());
+    }
+
+    @GetMapping("/{codigo}/basic")
+    public ResponseEntity<Articulo> obtenerBasico(@PathVariable String codigo){
+        return ResponseEntity.ok(articuloService.obtenerPorCodigo(codigo));
+    }
+
+    @GetMapping("/{codigo}/precio-actual")
+    public ResponseEntity<ArticuloPrecioActualDTO> obtenerPrecioActual(
+            @PathVariable String codigo,
+            @RequestParam Integer listaPrecioId
+    ) {
+        return ResponseEntity.ok(articuloService.obtenerPrecioActual(codigo, listaPrecioId));
+    }
+
+    @GetMapping
+    public List<ArticuloDTO> listar() {
+        return articuloRepository.findAll().stream().map(a -> new ArticuloDTO(a.getCodigo(), a.getNombre(), a.getUnidadMedida())).toList();
     }
 }

@@ -70,7 +70,7 @@ onMounted(async () => {
                 sistema.
             </p>
 
-            <div class="flex flex-col gap-1">
+            <div class="flex flex-col gap-2">
                 <BaseDropdown label="Sistema" placeholder="Seleccionar" v-model="sistemaId" :options="systemOptions"
                     :searchable="false" :disabled="submitting"/>
                 <BaseInputText label="Nombre de la lista" v-model="nombreLista" :disabled="submitting"/>
@@ -82,7 +82,7 @@ onMounted(async () => {
         <template #footer>
             <div class="flex justify-end gap-3">
                 <BaseButton label="Cancelar" variant="outline" class="w-[120px]" :disabled="submitting" @click="close" />
-                <BaseButton label="Agregar lista" variant="accept" class="w-[150px]" :disabled="!!error || submitting"
+                <BaseButton label="Crear lista" variant="accept" class="w-[150px]" :disabled="!!error || submitting"
                     @click="submit" />
             </div>
         </template>

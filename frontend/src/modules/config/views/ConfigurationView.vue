@@ -8,16 +8,26 @@ import IconPlus from '@/icons/plus.svg?component'
 import IconPencilSquare from '@/icons/pencil-square.svg?component'
 import IconArrowLeft from '@/icons/arrow-left.svg'
 import AddPriceListModal from '@/components/modals/AddPriceListModal.vue'
+import AddArticleModal from '@/components/modals/AddArticleModal.vue'
 import api from '@/services/axios'
 import { useRouter } from 'vue-router'
 import { useParameters } from '../composables/useParameters'
 import BaseDropdown from '@/components/common/BaseDropdown.vue'
+import EditArticleModal from '@/components/modals/EditArticleModal.vue'
 
 const router = useRouter()
 
 const addListOpen = ref(false)
 const addListSubmitting = ref(false)
 const addListError = ref('')
+
+const addArticleOpen = ref(false)
+const addArticleSubmitting = ref(false)
+const addArticleError = ref('')
+
+const editArticleOpen = ref(false)
+const editArticleSubmitting = ref(false)
+const editArticleError = ref('')
 
 const { systems, listasPrecio, articulos, loading, error, loadAll } = useParameters()
 
@@ -58,6 +68,14 @@ function openAddList() {
   addListOpen.value = true
 }
 
+function openAddArticle() {
+  addArticleOpen.value = true
+}
+
+function openEditArticle() {
+  editArticleOpen.value = true
+}
+
 async function onAddList(payload) {
   // payload debe venir como: { nombre, sistemaId }
   addListError.value = ''
@@ -72,6 +90,47 @@ async function onAddList(payload) {
     console.error(e)
   } finally {
     addListSubmitting.value = false
+  }
+}
+
+async function onAddArticle(payload) {
+  // payload debe venir como: { codigo, nombre, um }
+  addArticleError.value = ''
+  addArticleSubmitting.value = true
+
+  try {
+    await api.post('/articulos', payload)
+    addArticleOpen.value = false
+    await loadAll()
+  } catch (e) {
+    addArticleError.value = e?.response?.data?.message || (typeof e?.response?.data === 'string' ? e.response.data : '') || 'No se pudo crear el artículo'
+    console.error(e)
+  } finally {
+    addArticleSubmitting.value = false
+  }
+}
+
+async function onEditArticle(payload) {
+  // payload debe venir como: { codigo, nombre, um }
+  editArticleError.value = ''
+  editArticleSubmitting.value = true
+
+  try {
+    await api.put(`/articulos/${payload.codigo}`, {
+      nombre: payload.nombre,
+      unidadMedida: payload.unidadMedida
+    })
+
+    editArticleOpen.value = false
+    await loadAll()
+  } catch (e) {
+    editArticleError.value =
+      e?.response?.data?.message ||
+      (typeof e?.response?.data === 'string' ? e.response.data : '') ||
+      'No se pudo actualizar el artículo'
+    console.error(e)
+  } finally {
+    editArticleSubmitting.value = false
   }
 }
 
@@ -123,15 +182,15 @@ onMounted(async () => {
           </template>
         </BaseButton>
 
-        <div v-if="listasOpen" class="w-full">
-          <BaseDropdown label="Listas desde BD" :options="listasOptions" placeholder="Selecciona una lista"
+        <div v-if="listasOpen" class="w-[300px]">
+          <BaseDropdown label="Listas desde BD" :options="listasOptions" placeholder="Ver listas"
             :disabled="loading" searchable />
           <p v-if="!listasOptions.length && !loading" class="text-sm text-slate-500 mt-2"> No hay listas de precio
             registradas</p>
         </div>
 
 
-        <BaseButton label="Agregar lista de precios" variant="secondary" @click="openAddList">
+        <BaseButton label="Agregar lista de precios" variant="secondary" class="gap-[10px]" @click="openAddList">
           <template #iconRight>
             <IconPlus class="h-5 w-5 text-white" />
           </template>
@@ -155,8 +214,8 @@ onMounted(async () => {
           </template>
         </BaseButton>
 
-        <div v-if="articulosOpen" class="w-full">
-          <BaseDropdown v-model="selectedArticuloCodigo" label="Articulos desde BD" :options="articulosOptions" placeholder="Selecciona un articulo"
+        <div v-if="articulosOpen" class="w-[500px]">
+          <BaseDropdown v-model="selectedArticuloCodigo" label="Articulos desde BD" :options="articulosOptions" placeholder="Ver artículos"
             :disabled="loading" searchable />
           <p v-if="!articulosOptions.length && !loading" class="text-sm text-slate-500 mt-2"> No hay articulos
             registrados
@@ -165,13 +224,13 @@ onMounted(async () => {
 
 
         <div class="flex flex-row gap-[20px]">
-          <BaseButton label="Agregar artículo" variant="secondary" class="gap-[10px]">
+          <BaseButton label="Agregar artículo" variant="secondary" class="gap-[10px]" @click="openAddArticle">
             <template #iconRight>
               <IconPlus class="h-5 w-5 text-white" />
             </template>
           </BaseButton>
 
-          <BaseButton label="Editar artículo" variant="secondary" class="gap-[10px]">
+          <BaseButton label="Editar artículo" variant="secondary" class="gap-[10px]" @click="openEditArticle">
             <template #iconRight>
               <IconPencilSquare class="h-5 w-5 text-white" />
             </template>
@@ -210,5 +269,9 @@ onMounted(async () => {
 
     <AddPriceListModal v-model:open="addListOpen" :server-error="addListError" :submitting="addListSubmitting"
       @confirm="onAddList" />
+
+    <AddArticleModal v-model:open="addArticleOpen" :server-error="addArticleError" :submitting="addArticleSubmitting" @confirm="onAddArticle" />
+
+    <EditArticleModal v-model:open="editArticleOpen" :server-error="editArticleError" :submitting="editArticleSubmitting" @confirm="onEditArticle"/>
   </SettingsLayout>
 </template>

@@ -8,4 +8,5 @@ import java.math.BigDecimal;
 public class CambioEnListaDTO {
     private Integer listaPrecioId;
     private BigDecimal precioNuevo;
+    private String observacion;
 }

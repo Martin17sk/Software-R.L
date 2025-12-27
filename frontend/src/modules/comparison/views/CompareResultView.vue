@@ -4,7 +4,7 @@ import BaseTable from '@/components/common/BaseTable.vue'
 
 import Check from '@/icons/Check.png'
 import Cross from '@/icons/X.png'
-import Search from '@/icons/Search.png'
+//import Search from '@/icons/Search.png'
 import BaseInputText from '@/components/common/BaseInputText.vue';
 import BaseDropdown from '@/components/common/BaseDropdown.vue';
 import { computed, ref, onMounted } from 'vue';

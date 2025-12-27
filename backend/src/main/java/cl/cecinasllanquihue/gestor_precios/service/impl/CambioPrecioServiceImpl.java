@@ -40,10 +40,6 @@ public class CambioPrecioServiceImpl implements CambioPrecioService {
 
         validarRequest(request);
 
-        if (request.getPrecioNuevo() == null || request.getPrecioNuevo().compareTo(BigDecimal.ZERO) < 0) {
-            throw new IllegalArgumentException("El precio nuevo no puede ser nulo ni negativo.");
-        }
-
         Articulo articulo = articuloRepository.findById(request.getArticuloCodigo())
                 .orElseThrow(() -> new EntityNotFoundException("PRE_E001: Artículo no existe"));
 
@@ -61,11 +57,11 @@ public class CambioPrecioServiceImpl implements CambioPrecioService {
 
         BigDecimal precioAnterior = precioActualOpt
                 .map(PrecioActual::getPrecio)
-                .orElse(null);
+                .orElse(BigDecimal.ZERO);
 
         BigDecimal precioNuevo = request.getPrecioNuevo();
 
-        if (precioAnterior != null && precioAnterior.compareTo(precioNuevo) == 0) {
+        if (precioActualOpt.isPresent() && precioAnterior.compareTo(precioNuevo) == 0) {
             throw new IllegalStateException("PRE_E005: Precio nuevo igual al anterior");
         }
 
@@ -82,7 +78,15 @@ public class CambioPrecioServiceImpl implements CambioPrecioService {
         historial = historialRepository.save(historial);
 
         //Actualizar precio_actual (upsert)
-        PrecioActual precioActual = precioActualOpt.orElseGet(PrecioActual::new);
+        PrecioActualId id = new PrecioActualId(articulo.getCodigo(), listaPrecio.getId());
+
+        PrecioActual precioActual = precioActualRepository.findById(id)
+                        .orElseGet(() -> {
+                            PrecioActual nuevo = new PrecioActual();
+                            nuevo.setId(id);
+                            return nuevo;
+                        });
+
         precioActual.setArticulo(articulo);
         precioActual.setListaPrecio(listaPrecio);
         precioActual.setPrecio(precioNuevo);
@@ -122,11 +126,21 @@ public class CambioPrecioServiceImpl implements CambioPrecioService {
         List<RegistrarCambioPrecioResponseDTO> respuestas = new java.util.ArrayList<>();
 
         for (var cambio : request.getCambios()) {
+            if (cambio.getListaPrecioId() == null) {
+                throw new IllegalArgumentException("PRE_MULTI_E003: listaPrecioId es obligatorio");
+            }
+            if (cambio.getPrecioNuevo() == null || cambio.getPrecioNuevo().compareTo(BigDecimal.ZERO) <= 0) {
+                throw new IllegalArgumentException("PRE_MULTI_E004: precioNuevo debe ser mayor a 0");
+            }
+            if (cambio.getObservacion() != null && cambio.getObservacion().length() > 255) {
+                throw new IllegalArgumentException("PRE_MULTI_E005: observación excede 255 caracteres");
+            }
+
             RegistrarCambioPrecioRequestDTO single = new RegistrarCambioPrecioRequestDTO();
             single.setArticuloCodigo(request.getArticuloCodigo());
             single.setListaPrecioId(cambio.getListaPrecioId());
             single.setPrecioNuevo(cambio.getPrecioNuevo());
-            single.setObservacion(request.getObservacion());
+            single.setObservacion(cambio.getObservacion());
 
             RegistrarCambioPrecioResponseDTO resp = registrarCambioPrecio(single);
             respuestas.add(resp);
@@ -135,6 +149,7 @@ public class CambioPrecioServiceImpl implements CambioPrecioService {
         resultado.setCambios(respuestas);
         return resultado;
     }
+
 
     private void validarRequest(RegistrarCambioPrecioRequestDTO request) {
 
