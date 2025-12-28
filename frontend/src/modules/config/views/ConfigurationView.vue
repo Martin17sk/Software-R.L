@@ -14,6 +14,7 @@ import { useRouter } from 'vue-router'
 import { useParameters } from '../composables/useParameters'
 import BaseDropdown from '@/components/common/BaseDropdown.vue'
 import EditArticleModal from '@/components/modals/EditArticleModal.vue'
+import AddUserModal from '@/components/modals/AddUserModal.vue'
 
 const router = useRouter()
 
@@ -28,6 +29,10 @@ const addArticleError = ref('')
 const editArticleOpen = ref(false)
 const editArticleSubmitting = ref(false)
 const editArticleError = ref('')
+
+const addUserOpen = ref(false)
+const addUserSubmitting = ref(false)
+const addUserError = ref('')
 
 const { systems, listasPrecio, articulos, loading, error, loadAll } = useParameters()
 
@@ -74,6 +79,10 @@ function openAddArticle() {
 
 function openEditArticle() {
   editArticleOpen.value = true
+}
+
+function openAddUser() {
+  addUserOpen.value = true
 }
 
 async function onAddList(payload) {
@@ -131,6 +140,27 @@ async function onEditArticle(payload) {
     console.error(e)
   } finally {
     editArticleSubmitting.value = false
+  }
+}
+
+async function onAddUser(payload) {
+  addUserError.value = ''
+  addUserSubmitting.value = true
+  try {
+    await api.post('/usuarios', payload)
+    addUserOpen.value = false
+    await loadAll() // o carga usuarios si los manejas aparte
+  } catch (e) {
+    if (e?.response?.status === 409) {
+      addUserError.value = 'Ese nombre de usuario ya existe.'
+    } else {
+      addUserError.value =
+        e?.response?.data?.message ||
+        (typeof e?.response?.data === 'string' ? e.response.data : '') ||
+        'No se pudo crear el usuario'
+    }
+  } finally {
+    addUserSubmitting.value = false
   }
 }
 
@@ -247,7 +277,7 @@ onMounted(async () => {
       </div>
 
       <div class="flex flex-col justify-center items-start gap-[10px]">
-        <BaseButton label="Agregar usuario" variant="secondary" class="gap-[10px]">
+        <BaseButton label="Agregar usuario" variant="secondary" class="gap-[10px]" @click="openAddUser">
           <template #iconRight>
             <IconPlus class="h-5 w-5 text-white" />
           </template>
@@ -273,5 +303,7 @@ onMounted(async () => {
     <AddArticleModal v-model:open="addArticleOpen" :server-error="addArticleError" :submitting="addArticleSubmitting" @confirm="onAddArticle" />
 
     <EditArticleModal v-model:open="editArticleOpen" :server-error="editArticleError" :submitting="editArticleSubmitting" @confirm="onEditArticle"/>
+
+    <AddUserModal v-model:open="addUserOpen" :server-error="addUserError" :submitting="addUserSubmitting" @confirm="onAddUser"/>
   </SettingsLayout>
 </template>
