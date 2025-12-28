@@ -2,9 +2,9 @@
 import BaseButton from '@/components/common/BaseButton.vue';
 import BaseTable from '@/components/common/BaseTable.vue'
 
-import Check from '@/icons/Check.png'
-import Cross from '@/icons/X.png'
-//import Search from '@/icons/Search.png'
+import IconCheck from '@/icons/check.svg'
+import IconXMark from '@/icons/x-mark.svg'
+import IconSearch from '@/icons/magnifying-glass.svg'
 import BaseInputText from '@/components/common/BaseInputText.vue';
 import BaseDropdown from '@/components/common/BaseDropdown.vue';
 import { computed, ref, onMounted } from 'vue';
@@ -40,8 +40,8 @@ const rows = computed(() => {
     }))
 })
 
-const okCount = computed(() => report.value?.totalSinDiscrepancias ?? 0)
-const badCount = computed(() => report.value?.totalConDiscrepancias ?? 0)
+const okCount = computed(() => report.value?.totalSinDiscrepancia ?? 0)
+const badCount = computed(() => report.value?.totalConDiscrepancia ?? 0)
 
 const query = ref('');
 const sortKey = ref('nombre:asc');
@@ -99,17 +99,21 @@ function goToCompare() {
                     <div class="flex flex-row gap-[10px]">
                         <div
                             class="flex flex-row bg-[#69F88D] text-white text-[22px] font-semibold rounded-[6px] gap-[10px] justify-center items-center px-[16px] py-[5px]">
-                            <span>123</span>
-                            <img :src="Check" alt="">
+                            <span>{{ okCount }}</span>
+                            <IconCheck class="h-6 w-6" />
                         </div>
                         <div
                             class="flex flex-row bg-[#FF7A7A] text-white text-[22px] font-semibold rounded-[6px] gap-[10px] justify-center items-center px-[16px] py-[5px]">
-                            <span>2</span>
-                            <img :src="Cross" alt="">
+                            <span>{{ badCount }}</span>
+                            <IconXMark class="h-6 w-6" />
                         </div>
                     </div>
-                    <BaseInputText label="Buscar" placeholder="Buscar artículo por código o nombre" :icon-right="Search"
-                        v-model="query" class="w-[300px]" />
+                    <BaseInputText label="Buscar" placeholder="Buscar artículo por código o nombre" v-model="query"
+                        class="w-[300px]">
+                        <template #iconRight>
+                            <IconSearch class="h-4 w-4" />
+                        </template>
+                    </BaseInputText>
                     <BaseDropdown label="Ordenar por:" :options="sortOptions" v-model="sortKey" />
                 </div>
 

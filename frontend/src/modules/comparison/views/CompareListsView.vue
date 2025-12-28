@@ -106,7 +106,7 @@ function goToResults() {
       <div>
         <div class="flex flex-col gap-[20px]">
           <h1>Comparar listas de precios</h1>
-          <div class="flex flex-row gap-[50px] items-start">
+          <div class="flex flex-row gap-[50px] items-center">
             <div class="flex flex-col w-[640px] bg-white p-[24px] rounded-[12px] gap-[32px] shadow-md">
               <BaseDropZone title="Subir archivo" subtitle="Por favor, suba el archivo en formato .xls o .xlsx"
                 accept=".xls,.xlsx" v-model:file="excelFileLeft" />

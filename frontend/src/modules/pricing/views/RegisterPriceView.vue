@@ -13,7 +13,7 @@ import ConfirmPriceChangeModal from '@/components/modals/ConfirmPriceChangeModal
 import FooterBar from '@/components/layout/FooterBar.vue';
 import { useRegisterPrice } from '../composables/useRegisterPrice';
 import { useNotifications } from '@/composables/useNotifications';
-import { registrarCambioPrecioMultiple } from '../services/pricingApi';
+import { fetchArticuloPrecioActual, registrarCambioPrecioMultiple } from '../services/pricingApi';
 
 const { notifySuccess, notifyError } = useNotifications()
 
@@ -26,8 +26,6 @@ const {
   newPrice,
   priceError,
   note,
-  loading,
-  error,
   fetchArticle,
   fetchCurrentPrice,
   registerPrice,
@@ -51,7 +49,7 @@ const variasListas = ref(false);
 const duplicatedListError = ref('');
 
 const priceRows = ref([
-  { id: crypto.randomUUID(), lista: '', precioAnterior: '$5.000', precioNuevo: '', nota: '', showNota: false },
+  { id: crypto.randomUUID(), lista: '', precioAnterior: null, precioNuevo: '', nota: '', showNota: false, loadingPrev: false, rowError: '' },
 ]);
 
 function addRow() {
@@ -78,9 +76,12 @@ function toggleNota(row) {
   row.showNota = willOpen;
 }
 
-function setRowLista(row, value) {
+async function setRowLista(row, value) {
+  row.rowError = ''
+
   if (value === '' || value === null || value === undefined) {
     row.lista = '';
+    row.precioAnterior = null
     duplicatedListError.value = '';
     return;
   }
@@ -92,7 +93,9 @@ function setRowLista(row, value) {
   }
 
   row.lista = value;
-  duplicatedListError.value = '';
+  duplicatedListError.value = ''
+
+  await fetchRowCurrentPrice(row)
 }
 
 function optionForRow(row) {
@@ -115,23 +118,35 @@ const canRemove = computed(() => priceRows.value.length > 1);
 const confirmOpen = ref(false)
 
 function openConfirm() {
-  // Validación mínima antes de abrir modal (para no mostrar modal inútil)
-  if (!articleCode.value) {
-    notifyError('Ingresa el código del artículo')
+  const codigo = String(articleCode.value || '').trim()
+  if (!codigo) return notifyError('Ingresa el código del artículo')
+
+  if (!variasListas.value) {
+    if (!selectedPriceList.value) return notifyError('Selecciona una lista de precios')
+    if (typeof newPrice.value !== 'number' || newPrice.value <= 0) return notifyError('Ingresa un precio nuevo válido')
+    if ((note.value?.length ?? 0) > 255) return notifyError('La nota excede los 255 caracteres')
+    confirmOpen.value = true
     return
   }
 
-  if (!variasListas.value) {
-    if (!selectedPriceList.value) {
-      notifyError('Selecciona una lista de precios')
-      return
-    }
+  if (duplicatedListError.value) return notifyError(duplicatedListError.value)
 
-    if (typeof newPrice.value !== 'number' || newPrice.value <= 0) {
-      notifyError('Ingresa un precio nuevo válido')
-      return
-    }
-  }
+  // filas válidas
+  const validRows = priceRows.value.filter(r => r.lista && Number(r.precioNuevo) > 0)
+  if (!validRows.length) return notifyError('Debes ingresar al menos un cambio válido')
+
+  // filas incompletas (lista sin precio o precio sin lista)
+  const hasIncomplete = priceRows.value.some(r => {
+    const hasList = !!r.lista
+    const hasNew = r.precioNuevo !== '' && r.precioNuevo !== null && r.precioNuevo !== undefined
+    const newOk = Number(r.precioNuevo) > 0
+    return (hasList && !newOk) || (!hasList && hasNew)
+  })
+  if (hasIncomplete) return notifyError('Tienes filas incompletas: selecciona lista y un precio nuevo válido')
+
+  // notas por fila
+  const noteTooLong = priceRows.value.some(r => (r.nota?.length ?? 0) > 255)
+  if (noteTooLong) return notifyError('Alguna nota de fila excede 255 caracteres')
 
   confirmOpen.value = true
 }
@@ -151,13 +166,12 @@ async function onConfirm() {
       notifySuccess('Precio registrado correctamente')
     } else {
       const cambios = priceRows.value
-        .filter(r => r.lista && r.precioNuevo !== '' && r.precioNuevo !== null && r.precioNuevo !== undefined)
+        .filter(r => r.lista && Number(r.precioNuevo) > 0)
         .map(r => ({
           listaPrecioId: Number(r.lista),
           precioNuevo: Number(r.precioNuevo),
-          observacion: r.nota || null
+          observacion: r.nota?.trim() ? r.nota.trim() : null
         }))
-        .filter(c => c.listaPrecioId && c.precioNuevo > 0)
 
       if (!cambios.length) {
         notifyError('Debes ingresar al menos un cambio válido')
@@ -198,12 +212,51 @@ async function onConfirm() {
 async function onArticleCommit() {
   try {
     await fetchArticle()
-    await fetchCurrentPrice() // solo si hay lista seleccionada
+    
+    if (!variasListas.value) {
+      await fetchCurrentPrice()
+    } else {
+      await Promise.all(priceRows.value.map(r => (r.lista ? fetchRowCurrentPrice(r) : Promise.resolve())))
+    }
   } catch {
-    // fetchArticle ya setea articleError y limpia name/precio
+    //
   }
 }
 
+async function fetchRowCurrentPrice(row) {
+  row.rowError = ''
+  row.precioAnterior = null
+
+  const codigo = String(articleCode.value || '').trim()
+  const listaId = row.lista
+
+  if (!codigo || !listaId) return
+
+  row.loadingPrev = true
+  try {
+    const res = await fetchArticuloPrecioActual(codigo, listaId)
+    row.precioAnterior = res?.precioActual ?? null
+    if (res?.nombre) articleName.value = res.nombre
+  } catch (e) {
+    row.precioAnterior = null
+    row.rowError = e?.response?.data?.message || 'No se pudo cargar el precio actual'
+    console.error(e)
+  } finally {
+    row.loadingPrev = false
+  }
+}
+
+const multipleChangesForModal = computed(() => {
+  if (!variasListas.value) return []
+  return priceRows.value
+    .filter(r => r.lista && Number(r.precioNuevo) > 0)
+    .map(r => ({
+      key: r.id,
+      listName: opciones.value.find(o => String(o.value) === String(r.lista))?.label ?? '',
+      prevPrice: r.precioAnterior,
+      nextPrice: r.precioNuevo,
+    }))
+})
 
 watch(variasListas, v => {
   if (v) {
@@ -217,6 +270,13 @@ watch(variasListas, v => {
 watch(articleCode, () => {
   articleName.value = ''
   articleError.value = ''
+  currentPrice.value = null
+
+  // Modo multiple
+  priceRows.value.forEach(r => {
+    r.precioAnterior = null
+    r.rowError = ''
+  })
 })
 </script>
 
@@ -228,21 +288,16 @@ watch(articleCode, () => {
         <form action="" class="gap-[20px] flex flex-col">
           <div class="w-full place-content-between flex flex-row gap-4">
 
-            <BaseInputText 
-              label="Códgo artículo" 
-              class="w-[125px]" 
-              v-model="articleCode"
-              @keydown.enter.prevent="onArticleCommit"
-              @blur="onArticleCommit" />
+            <BaseInputText label="Códgo artículo" class="w-[125px]" v-model="articleCode"
+              @keydown.enter.prevent="onArticleCommit" @blur="onArticleCommit" />
 
             <p v-if="articleError" class="text-xs text-red-600 mt-1">{{ articleError }}</p>
             <p v-if="priceError" class="text-xs text-red-600 mt-1">{{ priceError }}</p>
 
 
-            <BaseInputText label="Nombre artículo" class="w-[400px]" :modelValue="articleName"
-              :disabled="true">
+            <BaseInputText label="Nombre artículo" class="w-[400px]" :modelValue="articleName" :disabled="true">
               <template #iconRight>
-                <IconLockClosed class="h-4 w-4"/>
+                <IconLockClosed class="h-4 w-4" />
               </template>
             </BaseInputText>
           </div>
@@ -250,20 +305,16 @@ watch(articleCode, () => {
           <!-- Modo simple (variasListas = false) -->
           <div v-if="!variasListas" class="w-full flex flex-row place-content-between items-end gap-4">
             <BaseDropdown label="Lista de precios" placeholder="Seleccionar" v-model="selectedPriceList"
-              :options="opciones" :searchable="true" class="w-[260px]"
-              @update:modelValue="fetchCurrentPrice" />
+              :options="opciones" :searchable="true" class="w-[260px]" @update:modelValue="fetchCurrentPrice" />
 
-            <BaseInputText label="Precio actual" :disabled="true" :modelValue="currentPrice === null ?  '-' : `$${currentPrice}`"
-              class="w-[125px]">
+            <BaseInputText label="Precio actual" :disabled="true"
+              :modelValue="currentPrice === null ? '-' : `$${currentPrice}`" class="w-[125px]">
               <template #iconRight>
-                <IconLockClosed class="h-4 w-4"/>
+                <IconLockClosed class="h-4 w-4" />
               </template>
             </BaseInputText>
 
-            <BaseInputText 
-              label="Precio nuevo" 
-              :modelValue="newPrice ?? ''"
-              @update:modelValue="onNewPrice" 
+            <BaseInputText label="Precio nuevo" :modelValue="newPrice ?? ''" @update:modelValue="onNewPrice"
               class="w-[125px]" />
           </div>
 
@@ -290,10 +341,20 @@ watch(articleCode, () => {
                   @update:modelValue="val => setRowLista(row, val)" :options="optionForRow(row)" :searchable="true"
                   class="w-[260px]" />
 
-                <BaseInputText label="Precio anterior" :disabled="true" :modelValue="row.precioAnterior"
-                  class="w-[125px]" />
+                <BaseInputText label="Precio actual" :disabled="true"
+                  :modelValue="row.loadingPrev ? 'Cargando...' : (row.precioAnterior === null ? '-' : `$${row.precioAnterior}`)"
+                  class="w-[125px]">
+                  <template #iconRight>
+                    <IconLockClosed class="h-4 w-4" />
+                  </template>
+                </BaseInputText>
 
                 <BaseInputText label="Precio nuevo" v-model="row.precioNuevo" class="w-[125px]" />
+
+                <p v-if="row.rowError" class="text-xs text-red-600 pl-[29px]">
+                  {{ row.rowError }}
+                </p>
+
 
                 <!-- Botón Nota -->
                 <div class="absolute -right-20 bottom-[6px]">
@@ -357,7 +418,14 @@ watch(articleCode, () => {
     </FooterBar>
 
     <!-- Modal de confirmación -->
-    <ConfirmPriceChangeModal v-model:open="confirmOpen" :listName="listaSeleccionada" :prevPrice="precioAnteriorModal"
-      :nextPrice="precioNuevoModal" @confirm="onConfirm" />
+    <ConfirmPriceChangeModal 
+      v-model:open="confirmOpen" 
+      :multiple="variasListas" 
+      :changes="multipleChangesForModal" 
+      :multipleNote="note?.trim() ? note.trim() : ''" 
+      :listName="listaSeleccionada" 
+      :prevPrice="precioAnteriorModal"
+      :nextPrice="precioNuevoModal" 
+      @confirm="onConfirm" />
   </section>
 </template>
