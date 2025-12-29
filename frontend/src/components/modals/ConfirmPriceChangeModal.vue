@@ -47,10 +47,10 @@
       </div>
 
       <!-- MODO SIMPLE -->
-      <ul class="list-disc pl-5 text-sm text-slate-600 space-y-1">
+      <ul v-else class="list-disc pl-5 text-sm text-slate-600 space-y-1">
         <li>
           Lista de precio:
-          <span class="font-medium text-slate-900">{{ listName || '[nombre]' }}</span>
+          <span class="font-medium text-slate-900">{{ listName || `[nombre]` }}</span>
         </li>
         <li>
           Precio anterior:
@@ -82,6 +82,8 @@
 
 <script setup>
 import { computed } from 'vue'
+
+// Componentes
 import BaseModal from '@/components/common/BaseModal.vue'
 import BaseButton from '@/components/common/BaseButton.vue'
 

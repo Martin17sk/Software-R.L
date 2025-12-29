@@ -1,11 +1,21 @@
 <script setup>
+// ----- IMPORTS -----
+
+// Utilidades
 import { computed, ref, watch, onMounted } from 'vue'
+
+// Servicios
 import { fetchArticulos } from '@/modules/config/services/configApi'
+
+// Componentes
 import BaseModal from '@/components/common/BaseModal.vue'
 import BaseInputText from '@/components/common/BaseInputText.vue'
 import BaseButton from '@/components/common/BaseButton.vue'
 import BaseDropdown from '../common/BaseDropdown.vue'
 
+// ----- CONSTS -----
+
+// Props
 const props = defineProps({
     open: { type: Boolean, default: false },
 
@@ -14,24 +24,19 @@ const props = defineProps({
     submitting: { type: Boolean, default: false },
 })
 
+// Emit
 const emit = defineEmits(['update:open', 'confirm'])
 
+// Refs
 const articulos = ref([])
 const codigoArticulo = ref("")
 const nombreArticulo = ref("")
 const umArticulo = ref("")
 
+// Computeds
 const articuloOptions = computed(() =>
     articulos.value.map(a => ({ value: a.codigo, label: `${a.codigo} — ${a.nombre}` }))
 )
-
-watch(() => props.open, (v) => {
-    if (v) {
-        codigoArticulo.value = ""
-        nombreArticulo.value = ""
-        umArticulo.value = ""
-    }
-})
 
 const nombreTrimmed = computed(() => nombreArticulo.value.trim())
 const umTrimmed = computed(() => umArticulo.value.trim())
@@ -46,6 +51,7 @@ const error = computed(() => {
     return ''
 })
 
+// ----- FUNCIONES -----
 function close() {
     if (props.submitting) return
     emit('update:open', false)
@@ -62,6 +68,7 @@ function submit () {
     })
 }
 
+// ----- WATCHES -----
 watch(
     [codigoArticulo, articulos],
     ([codigo, lista]) => {
@@ -85,10 +92,18 @@ watch(
     { immediate: true }
 )
 
+watch(() => props.open, (v) => {
+    if (v) {
+        codigoArticulo.value = ""
+        nombreArticulo.value = ""
+        umArticulo.value = ""
+    }
+})
+
+// ----- MOUNTED -----
 onMounted(async () => {
     articulos.value = await fetchArticulos()
 })
-
 </script>
 
 <template>

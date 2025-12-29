@@ -1,23 +1,43 @@
 <script setup>
+// ----- IMPORTS -----
+
+// Utilidades
 import { computed, onMounted, ref, watch } from 'vue'
-import SettingsLayout from '@/components/layout/SettingsLayout.vue'
+import { useRouter } from 'vue-router'
+
+// Servicios
+import api from '@/services/axios'
+
+// Componentes
 import BaseButton from '@/components/common/BaseButton.vue'
 import BaseInputText from '@/components/common/BaseInputText.vue'
+import BaseDropdown from '@/components/common/BaseDropdown.vue'
+
+// Composables
+import { useParameters } from '../composables/useParameters'
+
+// Layouts
+import SettingsLayout from '@/components/layout/SettingsLayout.vue'
+
+// Modales
+import EditArticleModal from '@/components/modals/EditArticleModal.vue'
+import AddUserModal from '@/components/modals/AddUserModal.vue'
+import AddPriceListModal from '@/components/modals/AddPriceListModal.vue'
+import AddArticleModal from '@/components/modals/AddArticleModal.vue'
+
+// Iconos
 import IconChevronDown from '@/icons/chevron-down.svg?component'
 import IconPlus from '@/icons/plus.svg?component'
 import IconPencilSquare from '@/icons/pencil-square.svg?component'
 import IconArrowLeft from '@/icons/arrow-left.svg'
-import AddPriceListModal from '@/components/modals/AddPriceListModal.vue'
-import AddArticleModal from '@/components/modals/AddArticleModal.vue'
-import api from '@/services/axios'
-import { useRouter } from 'vue-router'
-import { useParameters } from '../composables/useParameters'
-import BaseDropdown from '@/components/common/BaseDropdown.vue'
-import EditArticleModal from '@/components/modals/EditArticleModal.vue'
-import AddUserModal from '@/components/modals/AddUserModal.vue'
 
+// ----- CONSTS -----
+
+// Utilidades
 const router = useRouter()
+const { listasPrecio, articulos, loading, error, loadAll } = useParameters()
 
+// Refs
 const addListOpen = ref(false)
 const addListSubmitting = ref(false)
 const addListError = ref('')
@@ -34,11 +54,12 @@ const addUserOpen = ref(false)
 const addUserSubmitting = ref(false)
 const addUserError = ref('')
 
-const { systems, listasPrecio, articulos, loading, error, loadAll } = useParameters()
-
 const listasOpen = ref(false)
 const articulosOpen = ref(false)
 
+const selectedArticuloCodigo = ref(null)
+
+// Computeds
 const listasOptions = computed(() =>
   (listasPrecio.value ?? []).map(lp => ({ value: lp.id, label: lp.nombre }))
 )
@@ -46,7 +67,7 @@ const listasOptions = computed(() =>
 const articulosOptions = computed(() =>
   (articulos.value ?? []).map(a => ({ value: a.codigo, label: `${a.codigo} — ${a.nombre}` }))
 )
-const selectedArticuloCodigo = ref(null)
+
 
 
 const sections = [
@@ -58,12 +79,7 @@ const sections = [
 
 const activeId = ref('general')
 
-// ejemplo de estado
 const deleteWindowValue = ref('24')
-
-function save() {
-  // llamar API
-}
 
 function goToRegister() {
   router.push({ name: 'register-price' })
@@ -291,10 +307,6 @@ onMounted(async () => {
           <IconArrowLeft class="h-6 w-6" />
         </template>
       </BaseButton>
-    </template>
-
-    <template #footer-right>
-      <BaseButton label="Guardar cambios" variant="accept" class="w-[160px]" @click="save" />
     </template>
 
     <AddPriceListModal v-model:open="addListOpen" :server-error="addListError" :submitting="addListSubmitting"

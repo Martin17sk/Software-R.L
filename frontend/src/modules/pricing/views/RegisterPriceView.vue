@@ -380,9 +380,9 @@ watch(articleCode, () => {
               </div>
 
               <!-- Nota (solo de esta fila) -->
-              <div v-show="row.showNota" class="pl-[29px]">
+              <div v-show="row.showNota">
                 <BaseTextarea label="Nota" placeholder="Escribe tu nota aquí" v-model="row.nota" :rows="4"
-                  class="w-[570px]" />
+                  class="w-full" />
               </div>
             </div>
 

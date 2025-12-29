@@ -25,7 +25,7 @@ const columns = [
   { key: 'responsable', label: 'Responsable' },
 ]
 
-const { rows, loading, error, load } = useHistory()
+const { rows, load } = useHistory()
 
 const router = useRouter()
 
@@ -90,7 +90,7 @@ onMounted(() => {
 
         <!-- Tabla de resultados -->
         <div class="history-table">
-          <BaseTable :columns="columns" :rows="rows" :max-height="420" />
+          <BaseTable :columns="columns" :rows="rows" :max-height="500" />
         </div>
       </div>
     </main>

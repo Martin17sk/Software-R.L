@@ -1,5 +1,7 @@
 <script setup>
 import { computed, ref, watch } from 'vue'
+
+// Componentes
 import BaseModal from '@/components/common/BaseModal.vue'
 import BaseInputText from '@/components/common/BaseInputText.vue'
 import BaseButton from '@/components/common/BaseButton.vue'
