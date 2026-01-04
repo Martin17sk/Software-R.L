@@ -212,7 +212,7 @@ async function onConfirm() {
 async function onArticleCommit() {
   try {
     await fetchArticle()
-    
+
     if (!variasListas.value) {
       await fetchCurrentPrice()
     } else {
@@ -287,13 +287,8 @@ watch(articleCode, () => {
         <h1>Cambio de precio de artículo</h1>
         <form action="" class="gap-[20px] flex flex-col">
           <div class="w-full place-content-between flex flex-row gap-4">
-
             <BaseInputText label="Códgo artículo" class="w-[125px]" v-model="articleCode"
               @keydown.enter.prevent="onArticleCommit" @blur="onArticleCommit" />
-
-            <p v-if="articleError" class="text-xs text-red-600 mt-1">{{ articleError }}</p>
-            <p v-if="priceError" class="text-xs text-red-600 mt-1">{{ priceError }}</p>
-
 
             <BaseInputText label="Nombre artículo" class="w-[400px]" :modelValue="articleName" :disabled="true">
               <template #iconRight>
@@ -321,11 +316,13 @@ watch(articleCode, () => {
           <div v-if="!variasListas" class="w-full">
             <BaseTextarea label="Nota (opcional)" placeholder="Escribe tu nota aquí" v-model="note" :rows="4"
               class="w-full" />
+
+            <p v-if="articleError" class="text-xs text-red-600 mt-1">{{ articleError }}</p>
+            <p v-if="priceError" class="text-xs text-red-600 mt-1">{{ priceError }}</p>
           </div>
 
           <!-- Modo varias listas (variasListas = true) -->
           <div v-else class="w-full flex flex-col gap-4">
-
             <div v-for="row in priceRows" :key="row.id" class="w-full flex flex-col gap-2">
               <!-- Fila principal -->
               <div class="w-full relative flex flex-row items-end gap-4">
@@ -335,7 +332,6 @@ watch(articleCode, () => {
                   @click="removeRow(row.id)">
                   <span class="block text-[12px] font-bold leading-[1] translate-y-[-1px]">−</span>
                 </button>
-
 
                 <BaseDropdown label="Lista de precios" placeholder="Seleccionar" :modelValue="row.lista"
                   @update:modelValue="val => setRowLista(row, val)" :options="optionForRow(row)" :searchable="true"
@@ -354,7 +350,6 @@ watch(articleCode, () => {
                 <p v-if="row.rowError" class="text-xs text-red-600 pl-[29px]">
                   {{ row.rowError }}
                 </p>
-
 
                 <!-- Botón Nota -->
                 <div class="absolute -right-20 bottom-[6px]">
@@ -397,7 +392,6 @@ watch(articleCode, () => {
               {{ duplicatedListError }}
             </div>
           </div>
-
         </form>
       </div>
     </main>
@@ -418,14 +412,8 @@ watch(articleCode, () => {
     </FooterBar>
 
     <!-- Modal de confirmación -->
-    <ConfirmPriceChangeModal 
-      v-model:open="confirmOpen" 
-      :multiple="variasListas" 
-      :changes="multipleChangesForModal" 
-      :multipleNote="note?.trim() ? note.trim() : ''" 
-      :listName="listaSeleccionada" 
-      :prevPrice="precioAnteriorModal"
-      :nextPrice="precioNuevoModal" 
-      @confirm="onConfirm" />
+    <ConfirmPriceChangeModal v-model:open="confirmOpen" :multiple="variasListas" :changes="multipleChangesForModal"
+      :multipleNote="note?.trim() ? note.trim() : ''" :listName="listaSeleccionada" :prevPrice="precioAnteriorModal"
+      :nextPrice="precioNuevoModal" @confirm="onConfirm" />
   </section>
 </template>

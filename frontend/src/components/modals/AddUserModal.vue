@@ -3,7 +3,6 @@ import { computed, ref, watch } from 'vue'
 import BaseModal from '@/components/common/BaseModal.vue'
 import BaseInputText from '@/components/common/BaseInputText.vue'
 import BaseButton from '@/components/common/BaseButton.vue'
-import BaseSwitch from '../common/BaseSwitch.vue'
 
 const props = defineProps({
     open: { type: Boolean, default: false },
@@ -73,11 +72,6 @@ function submit () {
                 <BaseInputText label="Nombre de usuario" v-model="nombreUsuario" :disabled="submitting"/>
                 <BaseInputText label="Contraseña" v-model="contrasenaUsuario" :disabled="submitting" type="password"/>
                 <BaseInputText label="Confirmar contraseña" v-model="confirmarContrasenaUsuario" :disabled="submitting" type="password"/>
-
-                <div class="flex flex-row gap-[10px] items-center">
-                    <p>Usuario activo</p>
-                    <BaseSwitch v-model="activo" :disabled="submitting" />
-                </div>
                 
                 <p v-if="error" class="text-xs text-red-600">{{ error }}</p>
                 <p v-else-if="serverError" class="text-sm text-red-600">{{ serverError }}</p>

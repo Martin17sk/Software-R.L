@@ -61,14 +61,6 @@
           <span class="font-medium text-slate-900">{{ formattedNext }}</span>
         </li>
       </ul>
-
-      <p class="text-sm text-slate-600">
-        Este registro quedará guardado en el historial y solo se podrá eliminar dentro de
-        <span class="font-semibold text-slate-900">24 horas</span>
-        desde la confirmación. Pasado ese plazo,
-        <span class="font-semibold underline underline-offset-2">no</span>
-        podrán modificarse.
-      </p>
     </div>
 
     <template #footer>

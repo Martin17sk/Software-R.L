@@ -14,16 +14,17 @@ import FooterBar from '@/components/layout/FooterBar.vue';
 import { useHistory } from '../composables/useHistory';
 
 const columns = [
-  { key: 'codigo', label: 'Código Artículo' },
-  { key: 'nombre', label: 'Nombre Artículo' },
-  { key: 'lista', label: 'Lista de precio' },
-  { key: 'sistema', label: 'Sistema' },
-  { key: 'precioAnterior', label: 'Precio Anterior' },
-  { key: 'precioActual', label: 'Precio Actual' },
-  { key: 'fechaCambio', label: 'Fecha de Cambio' },
-  { key: 'nota', label: 'Nota' },
-  { key: 'responsable', label: 'Responsable' },
+  { key: 'codigo', label: 'Código Artículo', width: '100px', wrap: 'break-all' },
+  { key: 'nombre', label: 'Nombre Artículo', width: '250px' },
+  { key: 'lista', label: 'Lista de precio', width: '120px' },
+  { key: 'sistema', label: 'Sistema', width: '100px' },
+  { key: 'precioAnterior', label: 'Precio Anterior', width: '130px'},
+  { key: 'precioActual', label: 'Precio Actual', width: '130px'},
+  { key: 'fechaCambio', label: 'Fecha de Cambio', width: '200px',},
+  { key: 'nota', label: 'Nota', width: '200px' },
+  { key: 'responsable', label: 'Responsable', width: '120px' },
 ]
+
 
 const { rows, load } = useHistory()
 
@@ -73,7 +74,7 @@ onMounted(() => {
 <template>
   <section class="bg-[#F4F4F4] h-full w-full flex flex-col">
     <main class="flex-1 min-h-0 w-full flex flex-col items-center overflow-hidden">
-      <div class="flex flex-col gap-[50px] w-full max-w-[1200px] px-6 py-6 min-h-0">
+      <div class="flex flex-col gap-[50px] w-full max-w-[1500px] px-6 py-6 min-h-0">
         <!-- Toolbar -->
         <div class="flex flex-row gap-[20px] justify-center items-end shrink-0">
           <BaseInputText label="Buscar" placeholder="Buscar artículo por código o nombre"

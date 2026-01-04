@@ -200,11 +200,6 @@ function goToResults() {
         <BaseButton label="Comparar" variant="accept" class="w-[200px]" :disabled="!excelFileLeft || !excelFileRight"
           @click="runCompare" />
       </template>
-
-      <!-- solo para debug -->
-      <template #right>
-        <BaseButton label="Continuar (debug)" variant="secondary" class="w-[200px]" @click="goToResults" />
-      </template>
     </FooterBar>
   </section>
 </template>
