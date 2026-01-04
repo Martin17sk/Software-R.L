@@ -1,7 +1,6 @@
 package cl.cecinasllanquihue.gestor_precios.model;
 
 import jakarta.persistence.*;
-import lombok.Data;
 import lombok.Getter;
 
 import java.io.Serializable;

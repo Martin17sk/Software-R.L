@@ -18,7 +18,7 @@ const excelFileRight = ref(null)
 
 const router = useRouter()
 
-const { setFileA, setFileB, compare, loading } = useCompareLists()
+const { setFileA, setFileB, compare } = useCompareLists()
 
 // TODO: por ahora fijo. Después lo tomas desde tu selector real de sistema.
 const sistemaId = ref(1)
@@ -108,7 +108,7 @@ function goToResults() {
           <h1>Comparar listas de precios</h1>
           <div class="flex flex-row gap-[50px] items-center">
             <div class="flex flex-col w-[640px] bg-white p-[24px] rounded-[12px] gap-[32px] shadow-md">
-              <BaseDropZone title="Subir archivo" subtitle="Por favor, suba el archivo en formato .xls o .xlsx"
+              <BaseDropZone title="Subir archivo" subtitle="Por favor, suba el archivo de referencia en formato .xls o .xlsx"
                 accept=".xls,.xlsx" v-model:file="excelFileLeft" />
 
               <div v-if="previewErrorLeft" class="text-sm text-red-600">
@@ -151,7 +151,7 @@ function goToResults() {
               <IconArrowsRightLeft class="w-24 h-24"/>
             </div>
             <div class="flex flex-col w-[640px] bg-white p-[24px] rounded-[12px] gap-[32px] shadow-md">
-              <BaseDropZone title="Subir archivo" subtitle="Por favor, suba el archivo en formato .xls o .xlsx"
+              <BaseDropZone title="Subir archivo" subtitle="Por favor, suba el archivo a comparar con la referencia en formato .xls o .xlsx"
                 accept=".xls,.xlsx" v-model:file="excelFileRight" />
 
               <div v-if="previewErrorRight" class="text-sm text-red-600">

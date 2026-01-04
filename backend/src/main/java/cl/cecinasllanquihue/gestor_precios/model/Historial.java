@@ -1,7 +1,8 @@
 package cl.cecinasllanquihue.gestor_precios.model;
 
 import jakarta.persistence.*;
-import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -15,6 +16,8 @@ import java.time.LocalDateTime;
                 @Index(name = "idx_hist_fecha", columnList = "regh_fechahora")
         }
 )
+@Getter
+@Setter
 public class Historial {
 
     @Id
@@ -45,69 +48,5 @@ public class Historial {
 
     @Column(name = "regh_observacion", length = 255)
     private String observacion;
-
-    public Integer getId() {
-        return id;
-    }
-
-    public void setId(Integer id) {
-        this.id = id;
-    }
-
-    public LocalDateTime getFechaHora() {
-        return fechaHora;
-    }
-
-    public void setFechaHora(LocalDateTime fechaHora) {
-        this.fechaHora = fechaHora;
-    }
-
-    public Usuario getUsuario() {
-        return usuario;
-    }
-
-    public void setUsuario(Usuario usuario) {
-        this.usuario = usuario;
-    }
-
-    public Articulo getArticulo() {
-        return articulo;
-    }
-
-    public void setArticulo(Articulo articulo) {
-        this.articulo = articulo;
-    }
-
-    public ListaPrecio getListaPrecio() {
-        return listaPrecio;
-    }
-
-    public void setListaPrecio(ListaPrecio listaPrecio) {
-        this.listaPrecio = listaPrecio;
-    }
-
-    public BigDecimal getPrecioAnterior() {
-        return precioAnterior;
-    }
-
-    public void setPrecioAnterior(BigDecimal precioAnterior) {
-        this.precioAnterior = precioAnterior;
-    }
-
-    public BigDecimal getPrecioNuevo() {
-        return precioNuevo;
-    }
-
-    public void setPrecioNuevo(BigDecimal precioNuevo) {
-        this.precioNuevo = precioNuevo;
-    }
-
-    public String getObservacion() {
-        return observacion;
-    }
-
-    public void setObservacion(String observacion) {
-        this.observacion = observacion;
-    }
 }
 

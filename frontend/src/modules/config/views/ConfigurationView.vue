@@ -30,6 +30,10 @@ import IconChevronDown from '@/icons/chevron-down.svg?component'
 import IconPlus from '@/icons/plus.svg?component'
 import IconPencilSquare from '@/icons/pencil-square.svg?component'
 import IconArrowLeft from '@/icons/arrow-left.svg'
+import IconSearch from '@/icons/magnifying-glass.svg'
+import IconChevronLeft from '@/icons/chevron-left.svg'
+import IconChevronRight from '@/icons/chevron-right.svg'
+import BaseIconButton from '@/components/common/BaseIconButton.vue'
 
 // ----- CONSTS -----
 
@@ -59,6 +63,32 @@ const articulosOpen = ref(false)
 
 const selectedArticuloCodigo = ref(null)
 
+// --- buscador ---
+const searchArticulo = ref('')
+
+// --- paginacion ---
+const currentPage = ref(1)
+const pageSize = 20
+
+const filteredArticulos = computed(() => {
+  const q = (searchArticulo.value ?? '').trim().toLowerCase()
+  if (!q) return articulosOptions.value
+
+  // Filtra por código o nombre (como tu label trae "codigo — nombre", sirve igual)
+  return articulosOptions.value.filter(o =>
+    String(o.label).toLowerCase().includes(q) || String(o.value).toLowerCase().includes(q)
+  )
+})
+
+const paginatedArticulos = computed(() => {
+  const start = (currentPage.value - 1) * pageSize
+  return filteredArticulos.value.slice(start, start + pageSize)
+})
+
+const totalPages = computed(() =>
+  Math.max(1, Math.ceil(filteredArticulos.value.length / pageSize))
+)
+
 // Computeds
 const listasOptions = computed(() =>
   (listasPrecio.value ?? []).map(lp => ({ value: lp.id, label: lp.nombre }))
@@ -68,18 +98,13 @@ const articulosOptions = computed(() =>
   (articulos.value ?? []).map(a => ({ value: a.codigo, label: `${a.codigo} — ${a.nombre}` }))
 )
 
-
-
 const sections = [
-  { id: 'general', label: 'General' },
   { id: 'listas', label: 'Listas de precios' },
   { id: 'articulos', label: 'Artículos' },
   { id: 'usuarios', label: 'Usuarios' }
 ]
 
-const activeId = ref('general')
-
-const deleteWindowValue = ref('24')
+const activeId = ref('listas')
 
 function goToRegister() {
   router.push({ name: 'register-price' })
@@ -189,6 +214,15 @@ watch(activeId, () => {
   articulosOpen.value = false
 })
 
+watch(searchArticulo, () => {
+  currentPage.value = 1
+})
+
+// Si cambia el total de páginas (por filtro o carga), asegura página válida
+watch(totalPages, () => {
+  if (currentPage.value > totalPages.value) currentPage.value = totalPages.value
+})
+
 onMounted(async () => {
   await loadAll()
 })
@@ -197,22 +231,8 @@ onMounted(async () => {
 
 <template>
   <SettingsLayout v-model:activeId="activeId" :sections="sections" title="Configuración">
-    <!-- Sección: General -->
-    <p v-if="error" class="text-sm text-red-600">{{ error }}</p>
-    <div v-if="activeId === 'general'" class="max-w-[700px]">
-      <h2 class="text-base font-semibold text-slate-900">General</h2>
-      <p class="text-sm text-slate-500 mt-1">Ajusta parámetros globales</p>
 
-      <div class="mt-6 flex items-end gap-4">
-        <div class="text-sm text-slate-700 w-[260px]">
-          Tiempo límite para eliminación de registro (en horas)
-        </div>
-
-        <BaseInputText class="w-[80px]" v-model="deleteWindowValue" />
-      </div>
-    </div>
-
-    <!-- Sección: Listas -->
+    <!-- Sección: Listas de precios -->
     <p v-if="error" class="text-sm text-red-600">{{ error }}</p>
     <div v-else-if="activeId === 'listas'" class="flex flex-col max-w-[700px] gap-[20px]">
       <div class="flex flex-col">
@@ -229,12 +249,12 @@ onMounted(async () => {
         </BaseButton>
 
         <div v-if="listasOpen" class="w-[300px]">
-          <BaseDropdown label="Listas desde BD" :options="listasOptions" placeholder="Ver listas"
-            :disabled="loading" searchable />
-          <p v-if="!listasOptions.length && !loading" class="text-sm text-slate-500 mt-2"> No hay listas de precio
-            registradas</p>
+          <ul class="list-disc pl-5 text-sm text-slate-600">
+            <li v-for="list in listasOptions" :key="list.value">
+              {{ list.label }}
+            </li>
+          </ul>
         </div>
-
 
         <BaseButton label="Agregar lista de precios" variant="secondary" class="gap-[10px]" @click="openAddList">
           <template #iconRight>
@@ -260,13 +280,38 @@ onMounted(async () => {
           </template>
         </BaseButton>
 
-        <div v-if="articulosOpen" class="w-[500px]">
-          <BaseDropdown v-model="selectedArticuloCodigo" label="Articulos desde BD" :options="articulosOptions" placeholder="Ver artículos"
-            :disabled="loading" searchable />
-          <p v-if="!articulosOptions.length && !loading" class="text-sm text-slate-500 mt-2"> No hay articulos
-            registrados
-          </p>
+        <div v-if="articulosOpen" class="space-y-3">
+          <BaseInputText v-model="searchArticulo" placeholder="Buscar artículo (código o nombre)">
+            <template #iconRight>
+              <IconSearch class="h-4 w-4" />
+            </template>
+          </BaseInputText>
+
+          <ul class="list-disc pl-5 text-sm text-slate-600 space-y-1">
+            <li v-for="item in paginatedArticulos" :key="item.value">
+              {{ item.label }}
+            </li>
+          </ul>
+
+          <div class="flex gap-2 items-center">
+            <BaseIconButton title="Anterior" :disabled="currentPage <= 1"
+              @click="currentPage = Math.max(1, currentPage - 1)">
+              <IconChevronLeft class="h-4 w-4" />
+            </BaseIconButton>
+
+            <span class="text-sm">
+              Página {{ currentPage }} de {{ totalPages }} · {{ filteredArticulos.length }} resultados
+            </span>
+
+            <BaseIconButton title="Siguiente" :disabled="currentPage >= totalPages"
+              @click="currentPage = Math.min(totalPages, currentPage + 1)">
+              <IconChevronRight class="h-4 w-4" />
+            </BaseIconButton>
+          </div>
         </div>
+
+
+
 
 
         <div class="flex flex-row gap-[20px]">
@@ -312,10 +357,13 @@ onMounted(async () => {
     <AddPriceListModal v-model:open="addListOpen" :server-error="addListError" :submitting="addListSubmitting"
       @confirm="onAddList" />
 
-    <AddArticleModal v-model:open="addArticleOpen" :server-error="addArticleError" :submitting="addArticleSubmitting" @confirm="onAddArticle" />
+    <AddArticleModal v-model:open="addArticleOpen" :server-error="addArticleError" :submitting="addArticleSubmitting"
+      @confirm="onAddArticle" />
 
-    <EditArticleModal v-model:open="editArticleOpen" :server-error="editArticleError" :submitting="editArticleSubmitting" @confirm="onEditArticle"/>
+    <EditArticleModal v-model:open="editArticleOpen" :server-error="editArticleError"
+      :submitting="editArticleSubmitting" @confirm="onEditArticle" />
 
-    <AddUserModal v-model:open="addUserOpen" :server-error="addUserError" :submitting="addUserSubmitting" @confirm="onAddUser"/>
+    <AddUserModal v-model:open="addUserOpen" :server-error="addUserError" :submitting="addUserSubmitting"
+      @confirm="onAddUser" />
   </SettingsLayout>
 </template>
