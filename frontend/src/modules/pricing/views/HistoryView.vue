@@ -18,15 +18,15 @@ const columns = [
   { key: 'nombre', label: 'Nombre Artículo', width: '250px' },
   { key: 'lista', label: 'Lista de precio', width: '120px' },
   { key: 'sistema', label: 'Sistema', width: '100px' },
-  { key: 'precioAnterior', label: 'Precio Anterior', width: '130px'},
-  { key: 'precioActual', label: 'Precio Actual', width: '130px'},
-  { key: 'fechaCambio', label: 'Fecha de Cambio', width: '200px',},
+  { key: 'precioAnterior', label: 'Precio Anterior', width: '130px' },
+  { key: 'precioActual', label: 'Precio Actual', width: '130px' },
+  { key: 'fechaCambio', label: 'Fecha de Cambio', width: '200px', },
   { key: 'nota', label: 'Nota', width: '200px' },
   { key: 'responsable', label: 'Responsable', width: '120px' },
 ]
 
 
-const { rows, load } = useHistory()
+const { rows, load, totalPages, totalElements } = useHistory()
 
 const router = useRouter()
 
@@ -49,24 +49,40 @@ const sortOptions = [
   { value: 'fechaCambio:desc', label: 'Fecha de Cambio Descendente' },
 ]
 
+const page = ref(0)
+const pageSize = 30
+
 let debounceId = null
 
 function goToRegister() {
-  router.push({name: 'register-price'})
+  router.push({ name: 'register-price' })
+}
+
+function fetchPage(p = 0) {
+  page.value = p
+  load({
+    search: query.value,
+    sortKey: sortKey.value,
+    page: page.value,
+    size: pageSize,
+  })
 }
 
 function reload() {
   clearTimeout(debounceId)
   debounceId = setTimeout(() => {
-    load({ search: query.value, sortKey: sortKey.value, page: 0 })
+    fetchPage(0)
   }, 300)
 }
 
 watch(query, reload)
-watch(sortKey, () => load({ search: query.value, sortKey: sortKey.value, page: 0 }))
+
+watch(sortKey, () => {
+  fetchPage(0)
+})
 
 onMounted(() => {
-  load({ search: query.value, sortKey: sortKey.value, page: 0 })
+  fetchPage(0)
 })
 
 </script>
@@ -77,10 +93,10 @@ onMounted(() => {
       <div class="flex flex-col gap-[50px] w-full max-w-[1500px] px-6 py-6 min-h-0">
         <!-- Toolbar -->
         <div class="flex flex-row gap-[20px] justify-center items-end shrink-0">
-          <BaseInputText label="Buscar" placeholder="Buscar artículo por código o nombre"
-            v-model="query" class="w-[300px]">
+          <BaseInputText label="Buscar" placeholder="Buscar artículo" v-model="query"
+            class="w-[300px]">
             <template #iconRight>
-              <IconSearch class="h-4 w-4"/>
+              <IconSearch class="h-4 w-4" />
             </template>
           </BaseInputText>
           <BaseDropdown label="Ordenar por:" :options="sortOptions" v-model="sortKey" />
@@ -92,6 +108,19 @@ onMounted(() => {
         <!-- Tabla de resultados -->
         <div class="history-table">
           <BaseTable :columns="columns" :rows="rows" :max-height="500" />
+
+          <div class="flex items-center justify-between">
+            <span class="text-sm text-slate-600">
+              Página {{ page + 1 }}<span v-if="totalPages"> de {{ totalPages }}</span>
+              <span v-if="typeof totalElements === 'number'"> · {{ totalElements }} registros</span>
+            </span>
+
+            <div class="flex gap-2">
+              <BaseButton label="Anterior" variant="ghost" :disabled="page <= 0" @click="fetchPage(page - 1)" />
+              <BaseButton label="Siguiente" variant="ghost"
+                :disabled="totalPages ? page >= totalPages - 1 : rows.length < pageSize" @click="fetchPage(page + 1)" />
+            </div>
+          </div>
         </div>
       </div>
     </main>

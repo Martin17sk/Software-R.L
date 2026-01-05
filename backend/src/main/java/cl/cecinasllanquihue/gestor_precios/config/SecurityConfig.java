@@ -60,7 +60,7 @@ public class SecurityConfig {
         config.addAllowedOriginPattern("http://localhost:5173");
         config.addAllowedOriginPattern("http://127.0.0.1:5173");
 
-        config.addAllowedMethod("*");
+        config.setAllowedMethods(java.util.List.of("GET","POST","PUT","DELETE","OPTIONS"));
         config.addAllowedHeader("*");
         config.setAllowCredentials(true);
 

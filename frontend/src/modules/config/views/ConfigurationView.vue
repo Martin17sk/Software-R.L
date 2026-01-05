@@ -11,7 +11,7 @@ import api from '@/services/axios'
 // Componentes
 import BaseButton from '@/components/common/BaseButton.vue'
 import BaseInputText from '@/components/common/BaseInputText.vue'
-import BaseDropdown from '@/components/common/BaseDropdown.vue'
+import BaseIconButton from '@/components/common/BaseIconButton.vue'
 
 // Composables
 import { useParameters } from '../composables/useParameters'
@@ -33,13 +33,13 @@ import IconArrowLeft from '@/icons/arrow-left.svg'
 import IconSearch from '@/icons/magnifying-glass.svg'
 import IconChevronLeft from '@/icons/chevron-left.svg'
 import IconChevronRight from '@/icons/chevron-right.svg'
-import BaseIconButton from '@/components/common/BaseIconButton.vue'
+
 
 // ----- CONSTS -----
 
 // Utilidades
 const router = useRouter()
-const { listasPrecio, articulos, loading, error, loadAll } = useParameters()
+const { listasPrecio, articulos, error, loadAll } = useParameters()
 
 // Refs
 const addListOpen = ref(false)
@@ -61,10 +61,9 @@ const addUserError = ref('')
 const listasOpen = ref(false)
 const articulosOpen = ref(false)
 
-const selectedArticuloCodigo = ref(null)
-
 // --- buscador ---
 const searchArticulo = ref('')
+const searchLista = ref('')
 
 // --- paginacion ---
 const currentPage = ref(1)
@@ -80,13 +79,32 @@ const filteredArticulos = computed(() => {
   )
 })
 
+const filteredListas = computed(() => {
+  const q = (searchLista.value ?? '').trim().toLowerCase()
+  if (!q) return listasOptions.value
+
+  // Filtra por código o nombre (como tu label trae "codigo — nombre", sirve igual)
+  return listasOptions.value.filter(o =>
+    String(o.label).toLowerCase().includes(q) || String(o.value).toLowerCase().includes(q)
+  )
+})
+
 const paginatedArticulos = computed(() => {
   const start = (currentPage.value - 1) * pageSize
   return filteredArticulos.value.slice(start, start + pageSize)
 })
 
-const totalPages = computed(() =>
+const paginatedListas = computed(() => {
+  const start = (currentPage.value - 1) * pageSize
+  return filteredListas.value.slice(start, start + pageSize)
+})
+
+const totalPagesArticles = computed(() =>
   Math.max(1, Math.ceil(filteredArticulos.value.length / pageSize))
+)
+
+const totalPagesLists = computed(() =>
+  Math.max(1, Math.ceil(filteredListas.value.length / pageSize))
 )
 
 // Computeds
@@ -219,8 +237,12 @@ watch(searchArticulo, () => {
 })
 
 // Si cambia el total de páginas (por filtro o carga), asegura página válida
-watch(totalPages, () => {
-  if (currentPage.value > totalPages.value) currentPage.value = totalPages.value
+watch(totalPagesArticles, () => {
+  if (currentPage.value > totalPagesArticles.value) currentPage.value = totalPagesArticles.value
+})
+
+watch(totalPagesLists, () => {
+  if (currentPage.value > totalPagesLists.value) currentPage.value = totalPagesLists.value
 })
 
 onMounted(async () => {
@@ -241,6 +263,7 @@ onMounted(async () => {
       </div>
 
       <div class="flex flex-col justify-center items-start gap-[10px]">
+        <!-- Toggle listas -->
         <BaseButton label="Ver listas de precios" variant="ghost" class="gap-[10px] pt-0 pr-0 pb-0 pl-0"
           @click="toggleListas">
           <template #iconRight>
@@ -248,14 +271,41 @@ onMounted(async () => {
           </template>
         </BaseButton>
 
-        <div v-if="listasOpen" class="w-[300px]">
-          <ul class="list-disc pl-5 text-sm text-slate-600">
-            <li v-for="list in listasOptions" :key="list.value">
-              {{ list.label }}
+
+        <div v-if="listasOpen" class="space-y-3">
+          <!-- Buscador -->
+          <BaseInputText v-model="searchLista" placeholder="Buscar lista">
+            <template #iconRight>
+              <IconSearch class="h-4 w-4" />
+            </template>
+          </BaseInputText>
+
+          <!-- Lista de resultados -->
+          <ul class="list-disc pl-5 text-sm text-slate-600 space-y-1">
+            <li v-for="item in paginatedListas" :key="item.value">
+              {{ item.label }}
             </li>
           </ul>
+
+          <!-- Botones paginación -->
+          <div class="flex gap-2 items-center">
+            <BaseIconButton title="Anterior" :disabled="currentPage <= 1"
+              @click="currentPage = Math.max(1, currentPage - 1)">
+              <IconChevronLeft class="h-4 w-4" />
+            </BaseIconButton>
+
+            <span class="text-sm">
+              Página {{ currentPage }} de {{ totalPagesLists }} · {{ filteredListas.length }} resultados
+            </span>
+
+            <BaseIconButton title="Siguiente" :disabled="currentPage >= totalPagesLists"
+              @click="currentPage = Math.min(totalPagesLists, currentPage + 1)">
+              <IconChevronRight class="h-4 w-4" />
+            </BaseIconButton>
+          </div>
         </div>
 
+        <!-- Agregar lista -->
         <BaseButton label="Agregar lista de precios" variant="secondary" class="gap-[10px]" @click="openAddList">
           <template #iconRight>
             <IconPlus class="h-5 w-5 text-white" />
@@ -272,6 +322,7 @@ onMounted(async () => {
         <p class="text-sm text-slate-500 mt-1">Crea artículos</p>
       </div>
 
+      <!-- Toggle articulos -->
       <div class="flex flex-col justify-center items-start gap-[10px]">
         <BaseButton label="Ver artículos" variant="ghost" class="gap-[10px] pt-0 pr-0 pb-0 pl-0"
           @click="toggleArticulos">
@@ -281,18 +332,21 @@ onMounted(async () => {
         </BaseButton>
 
         <div v-if="articulosOpen" class="space-y-3">
+          <!-- Buscador artículos-->
           <BaseInputText v-model="searchArticulo" placeholder="Buscar artículo (código o nombre)">
             <template #iconRight>
               <IconSearch class="h-4 w-4" />
             </template>
           </BaseInputText>
 
+          <!-- Lista de resultados -->
           <ul class="list-disc pl-5 text-sm text-slate-600 space-y-1">
             <li v-for="item in paginatedArticulos" :key="item.value">
               {{ item.label }}
             </li>
           </ul>
 
+          <!-- Botones de paginación -->
           <div class="flex gap-2 items-center">
             <BaseIconButton title="Anterior" :disabled="currentPage <= 1"
               @click="currentPage = Math.max(1, currentPage - 1)">
@@ -300,20 +354,17 @@ onMounted(async () => {
             </BaseIconButton>
 
             <span class="text-sm">
-              Página {{ currentPage }} de {{ totalPages }} · {{ filteredArticulos.length }} resultados
+              Página {{ currentPage }} de {{ totalPagesArticles }} · {{ filteredArticulos.length }} resultados
             </span>
 
-            <BaseIconButton title="Siguiente" :disabled="currentPage >= totalPages"
-              @click="currentPage = Math.min(totalPages, currentPage + 1)">
+            <BaseIconButton title="Siguiente" :disabled="currentPage >= totalPagesArticles"
+              @click="currentPage = Math.min(totalPagesArticles, currentPage + 1)">
               <IconChevronRight class="h-4 w-4" />
             </BaseIconButton>
           </div>
         </div>
 
-
-
-
-
+        <!-- Botones agregar/editar artículos -->
         <div class="flex flex-row gap-[20px]">
           <BaseButton label="Agregar artículo" variant="secondary" class="gap-[10px]" @click="openAddArticle">
             <template #iconRight>
