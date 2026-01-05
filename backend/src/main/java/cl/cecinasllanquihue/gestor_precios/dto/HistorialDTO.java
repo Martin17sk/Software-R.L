@@ -15,6 +15,7 @@ public class HistorialDTO {
     private String usuarioNombre;
 
     private String articuloCodigo;
+    private String articuloNombre;
     private String unidadMedida;
 
     private Integer listaPrecioId;
@@ -22,6 +23,8 @@ public class HistorialDTO {
 
     private BigDecimal precioAnterior;
     private BigDecimal precioNuevo;
+
+    private String sistemaNombre;
 
     private String observacion;
 }

@@ -6,8 +6,7 @@ import org.springframework.stereotype.Repository;
 
 import java.util.Optional;
 
-@Repository
 public interface SistemaRepository extends JpaRepository<Sistema,Integer> {
 
-    Optional<Sistema> findByNombre(String nombre);
+    Optional<Sistema> findByNombreIgnoreCase(String nombre);
 }

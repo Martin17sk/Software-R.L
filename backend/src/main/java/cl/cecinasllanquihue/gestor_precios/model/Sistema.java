@@ -1,11 +1,23 @@
 package cl.cecinasllanquihue.gestor_precios.model;
 
 import jakarta.persistence.*;
-import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
 
 @Entity
-@Table(name = "sistema")
-@Data
+@Table(
+        name = "sistema",
+        uniqueConstraints = {
+                @UniqueConstraint(
+                        name = "uq_sistema_nombre",
+                        columnNames = "sistema_nombre"
+                )
+        },
+        indexes = {
+                @Index(name = "idx_sistema_nombre", columnList = "sistema_nombre")
+        }
+)
+@Getter @Setter
 public class Sistema {
 
     @Id

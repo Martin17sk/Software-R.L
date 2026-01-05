@@ -19,22 +19,17 @@ export function useHttpClient() {
       ...(options.headers || {}),
     };
 
-    // Solo agrega Content-Type si NO es FormData
     const isFormData = options.body instanceof FormData;
     if (!isFormData && !headers["Content-Type"]) {
       headers["Content-Type"] = "application/json";
     }
 
-    if (authToken.value) {
-      headers["Authorization"] = authToken.value;
-    }
-
     const res = await fetch(`${baseURL}${path}`, {
       ...options,
       headers,
+      credentials: "include",
     });
 
-    // Manejo de errores más útil
     const contentType = res.headers.get("content-type") || "";
     const body = contentType.includes("application/json")
       ? await res.json().catch(() => null)
@@ -51,12 +46,26 @@ export function useHttpClient() {
     return body;
   }
 
-  // Helpers
   const get = (path, options = {}) => request(path, { ...options, method: "GET" });
-  const post = (path, data, options = {}) =>
-    request(path, { ...options, method: "POST", body: JSON.stringify(data) });
-  const put = (path, data, options = {}) =>
-    request(path, { ...options, method: "PUT", body: JSON.stringify(data) });
+
+  const post = (path, data, options = {}) => {
+    const isFormData = data instanceof FormData;
+    return request(path, {
+      ...options,
+      method: "POST",
+      body: isFormData ? data : JSON.stringify(data)
+    })
+  }
+
+  const put = (path, data, options = {}) => {
+    const isFormData = data instanceof FormData;
+    return request(path, {
+      ...options,
+      method: "PUT",
+      body: isFormData ? data : JSON.stringify(data),
+    });
+  };
+
   const del = (path, options = {}) => request(path, { ...options, method: "DELETE" });
 
   return { request, get, post, put, del, setAuthToken, clearAuthToken };

@@ -1,37 +1,33 @@
-import { ref } from 'vue'
+import { computed, ref } from 'vue'
 import { useRouter } from 'vue-router'
-import { useHttpClient } from '@composables/useHttpClient'
-import { authApi } from '../services/authApi'
+import { useAuthStore } from '@/stores/auth.store'
 
 export function useAuth() {
-  const username = ref('')
-  const password = ref('')
-  const errorMessage = ref(null)
-  const loading = ref(false)
+  const authStore = useAuthStore()
   const router = useRouter()
-  const { get, setAuthToken, clearAuthToken } = useHttpClient()
+
+  const username = ref("")
+  const password = ref("")
+  const errorMessage = ref(null)
+
+  const loading = computed(() => authStore.loading)
 
   async function login() {
     errorMessage.value = null
-    loading.value = true
 
     try {
-      const token = 'Basic ' + btoa(`${username.value}:${password.value}`)
-      setAuthToken(token)
-
-      const api = authApi();
-
-      const user = await api.me();
-      console.log(user)
-
-      await router.push('/pricing/register')
-    } catch (err) {
-      clearAuthToken()
-      errorMessage.value = err?.message || 'Error al inicar sesión'
-    } finally {
-      loading.value = false
+      await authStore.login(username.value, password.value)
+      router.replace({ name: "home" })
+    } catch {
+      errorMessage.value = "Credenciales inválidas"
     }
   }
 
-  return { username, password, errorMessage, loading, login }
+  return {
+    username,
+    password,
+    errorMessage,
+    loading,
+    login,
+  }
 }

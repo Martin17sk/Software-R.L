@@ -6,6 +6,7 @@ import cl.cecinasllanquihue.gestor_precios.dto.RegistrarCambioPrecioRequestDTO;
 import cl.cecinasllanquihue.gestor_precios.dto.RegistrarCambioPrecioResponseDTO;
 import cl.cecinasllanquihue.gestor_precios.model.*;
 import cl.cecinasllanquihue.gestor_precios.repository.*;
+import cl.cecinasllanquihue.gestor_precios.security.AuthenticatedUserProvider;
 import cl.cecinasllanquihue.gestor_precios.service.CambioPrecioService;
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.stereotype.Service;
@@ -23,29 +24,21 @@ public class CambioPrecioServiceImpl implements CambioPrecioService {
     private final ListaPrecioRepository listaPrecioRepository;
     private final PrecioActualRepository precioActualRepository;
     private final HistorialRepository historialRepository;
-    private final UsuarioSesionServiceImpl usuarioSesionServiceImpl;
+    private final AuthenticatedUserProvider authUser;
 
-    public CambioPrecioServiceImpl(ArticuloRepository articuloRepository,
-                                   ListaPrecioRepository listaPrecioRepository,
-                                   PrecioActualRepository precioActualRepository,
-                                   HistorialRepository historialRepository,
-                                   UsuarioSesionServiceImpl usuarioSesionServiceImpl) {
+    public CambioPrecioServiceImpl(ArticuloRepository articuloRepository, ListaPrecioRepository listaPrecioRepository, PrecioActualRepository precioActualRepository, HistorialRepository historialRepository, AuthenticatedUserProvider authUser) {
         this.articuloRepository = articuloRepository;
         this.listaPrecioRepository = listaPrecioRepository;
         this.precioActualRepository = precioActualRepository;
         this.historialRepository = historialRepository;
-        this.usuarioSesionServiceImpl = usuarioSesionServiceImpl;
+        this.authUser = authUser;
     }
 
-    @Override
     @Transactional
+    @Override
     public RegistrarCambioPrecioResponseDTO registrarCambioPrecio(RegistrarCambioPrecioRequestDTO request){
 
         validarRequest(request);
-
-        if (request.getPrecioNuevo() == null || request.getPrecioNuevo().compareTo(BigDecimal.ZERO) < 0) {
-            throw new IllegalArgumentException("El precio nuevo no puede ser nulo ni negativo.");
-        }
 
         Articulo articulo = articuloRepository.findById(request.getArticuloCodigo())
                 .orElseThrow(() -> new EntityNotFoundException("PRE_E001: Artículo no existe"));
@@ -53,19 +46,22 @@ public class CambioPrecioServiceImpl implements CambioPrecioService {
         ListaPrecio listaPrecio = listaPrecioRepository.findById(request.getListaPrecioId())
                 .orElseThrow(() -> new EntityNotFoundException("PRE_E002: Lista de precio no existe"));
 
-        Usuario usuario = usuarioSesionServiceImpl.getUsuarioActual();
+        Usuario usuario = authUser.getUsuarioActual();
 
         // Obtener precio actual
-        Optional<PrecioActual> precioActualOpt = precioActualRepository
-                .findByArticulo_CodigoAndListaPrecio_Id(articulo.getCodigo(), listaPrecio.getId());
+        Optional<PrecioActual> precioActualOpt =
+                precioActualRepository.findByArticulo_CodigoAndListaPrecio_Id(
+                        articulo.getCodigo(),
+                        listaPrecio.getId()
+                );
 
         BigDecimal precioAnterior = precioActualOpt
                 .map(PrecioActual::getPrecio)
-                .orElse(null);
+                .orElse(BigDecimal.ZERO);
 
         BigDecimal precioNuevo = request.getPrecioNuevo();
 
-        if (precioAnterior != null && precioAnterior.compareTo(precioNuevo) == 0) {
+        if (precioActualOpt.isPresent() && precioAnterior.compareTo(precioNuevo) == 0) {
             throw new IllegalStateException("PRE_E005: Precio nuevo igual al anterior");
         }
 
@@ -82,7 +78,15 @@ public class CambioPrecioServiceImpl implements CambioPrecioService {
         historial = historialRepository.save(historial);
 
         //Actualizar precio_actual (upsert)
-        PrecioActual precioActual = precioActualOpt.orElseGet(PrecioActual::new);
+        PrecioActualId id = new PrecioActualId(articulo.getCodigo(), listaPrecio.getId());
+
+        PrecioActual precioActual = precioActualRepository.findById(id)
+                        .orElseGet(() -> {
+                            PrecioActual nuevo = new PrecioActual();
+                            nuevo.setId(id);
+                            return nuevo;
+                        });
+
         precioActual.setArticulo(articulo);
         precioActual.setListaPrecio(listaPrecio);
         precioActual.setPrecio(precioNuevo);
@@ -103,8 +107,8 @@ public class CambioPrecioServiceImpl implements CambioPrecioService {
         return response;
     }
 
-    @Override
     @Transactional
+    @Override
     public RegistrarCambioPrecioMultipleResponseDTO registrarCambioPrecioMultiple(
             RegistrarCambioPrecioMultipleRequestDTO request
     ) {
@@ -122,11 +126,21 @@ public class CambioPrecioServiceImpl implements CambioPrecioService {
         List<RegistrarCambioPrecioResponseDTO> respuestas = new java.util.ArrayList<>();
 
         for (var cambio : request.getCambios()) {
+            if (cambio.getListaPrecioId() == null) {
+                throw new IllegalArgumentException("PRE_MULTI_E003: listaPrecioId es obligatorio");
+            }
+            if (cambio.getPrecioNuevo() == null || cambio.getPrecioNuevo().compareTo(BigDecimal.ZERO) <= 0) {
+                throw new IllegalArgumentException("PRE_MULTI_E004: precioNuevo debe ser mayor a 0");
+            }
+            if (cambio.getObservacion() != null && cambio.getObservacion().length() > 255) {
+                throw new IllegalArgumentException("PRE_MULTI_E005: observación excede 255 caracteres");
+            }
+
             RegistrarCambioPrecioRequestDTO single = new RegistrarCambioPrecioRequestDTO();
             single.setArticuloCodigo(request.getArticuloCodigo());
             single.setListaPrecioId(cambio.getListaPrecioId());
             single.setPrecioNuevo(cambio.getPrecioNuevo());
-            single.setObservacion(request.getObservacion());
+            single.setObservacion(cambio.getObservacion());
 
             RegistrarCambioPrecioResponseDTO resp = registrarCambioPrecio(single);
             respuestas.add(resp);
@@ -135,6 +149,7 @@ public class CambioPrecioServiceImpl implements CambioPrecioService {
         resultado.setCambios(respuestas);
         return resultado;
     }
+
 
     private void validarRequest(RegistrarCambioPrecioRequestDTO request) {
 

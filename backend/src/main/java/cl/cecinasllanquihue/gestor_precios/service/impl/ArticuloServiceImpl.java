@@ -1,9 +1,15 @@
 package cl.cecinasllanquihue.gestor_precios.service.impl;
 
 import cl.cecinasllanquihue.gestor_precios.dto.ArticuloConPrecioActualDTO;
+import cl.cecinasllanquihue.gestor_precios.dto.ArticuloOptionDTO;
+import cl.cecinasllanquihue.gestor_precios.dto.ArticuloPrecioActualDTO;
+import cl.cecinasllanquihue.gestor_precios.dto.ArticuloUpdateDTO;
 import cl.cecinasllanquihue.gestor_precios.model.Articulo;
+import cl.cecinasllanquihue.gestor_precios.model.PrecioActual;
+import cl.cecinasllanquihue.gestor_precios.model.PrecioActualId;
 import cl.cecinasllanquihue.gestor_precios.repository.ArticuloRepository;
 import cl.cecinasllanquihue.gestor_precios.repository.ListaPrecioRepository;
+import cl.cecinasllanquihue.gestor_precios.repository.PrecioActualRepository;
 import cl.cecinasllanquihue.gestor_precios.service.ArticuloService;
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.stereotype.Service;
@@ -14,18 +20,13 @@ import java.util.List;
 public class ArticuloServiceImpl implements ArticuloService {
 
     private final ArticuloRepository articuloRepository;
-    private final ListaPrecioRepository listaPrecioRepository;
+    private final ListaPrecioRepository  listaPrecioRepository;
+    private final PrecioActualRepository precioActualRepository;
 
-    public ArticuloServiceImpl(ArticuloRepository articuloRepository,
-                               ListaPrecioRepository listaPrecioRepository) {
+    public ArticuloServiceImpl(ArticuloRepository articuloRepository,  ListaPrecioRepository listaPrecioRepository,  PrecioActualRepository precioActualRepository) {
         this.articuloRepository = articuloRepository;
         this.listaPrecioRepository = listaPrecioRepository;
-    }
-
-
-    @Override
-    public List<String> listarNombres() {
-        return articuloRepository.findAllNames();
+        this.precioActualRepository = precioActualRepository;
     }
 
     @Override
@@ -39,8 +40,7 @@ public class ArticuloServiceImpl implements ArticuloService {
             throw new IllegalArgumentException("ART_E002: listaPrecioId obligatorio");
         }
 
-        Integer listaId = resolveListaPrecioId(listaPrecioId);
-        return articuloRepository.buscarConPrecioPorNombre(query, listaId);
+        return articuloRepository.buscarConPrecioPorNombre(query, listaPrecioId);
     }
 
     @Override
@@ -55,8 +55,6 @@ public class ArticuloServiceImpl implements ArticuloService {
         }
 
         return articuloRepository.buscarConPrecioPorCodigo(codigo, listaPrecioId)
-                .stream()
-                .findFirst()
                 .orElseThrow(() -> new EntityNotFoundException("ART_E005: artículo no encontrado en esa lista"));
     }
 
@@ -94,15 +92,54 @@ public class ArticuloServiceImpl implements ArticuloService {
         return articuloRepository.save(existente);
     }
 
-    public Integer resolveListaPrecioId(Integer listaPrecioId) {
+    @Override
+    public List<ArticuloOptionDTO> listarOptions() {
+        return articuloRepository.findAllOptions();
+    }
 
-        if (listaPrecioId != null) {
-            if (!listaPrecioRepository.existsById(listaPrecioId)) {
-                throw new IllegalStateException("ART_E003: lista de precio inválida");
-            }
-            return listaPrecioId;
+    @Override
+    public Articulo obtenerPorCodigo(String codigo) {
+        if (codigo == null || codigo.isBlank()) {
+            throw new IllegalArgumentException("ART_E003: código de artículo obligatorio");
         }
-        // TODO: obtener desde parámetros; por ahora hardcodear
-        return 1;
+
+        return articuloRepository.findById(codigo)
+                .orElseThrow(() -> new EntityNotFoundException("ART_E005: artículo no encontrado"));
+    }
+
+    @Override
+    public ArticuloPrecioActualDTO obtenerPrecioActual(String codigo, Integer listaPrecioId) {
+        if (codigo == null || codigo.isBlank()) {
+            throw new IllegalArgumentException("ART_E003: código de artículo obligatorio");
+        }
+        if (listaPrecioId == null) {
+            throw new IllegalArgumentException("ART_E004: listaPrecioId obligatorio");
+        }
+        if (!listaPrecioRepository.existsById(listaPrecioId)) {
+            throw new IllegalStateException("ART_E006: lista de precio inválida");
+        }
+
+        Articulo articulo = articuloRepository.findById(codigo)
+                .orElseThrow(() -> new EntityNotFoundException("ART_E005: artículo no encontrado"));
+
+        var precioOpt = precioActualRepository.findById(new PrecioActualId(codigo, listaPrecioId));
+
+        ArticuloPrecioActualDTO dto = new ArticuloPrecioActualDTO();
+        dto.setCodigo(articulo.getCodigo());
+        dto.setNombre(articulo.getNombre());
+        dto.setListaPrecioId(listaPrecioId);
+        dto.setPrecioActual(precioOpt.map(PrecioActual::getPrecio).orElse(null));
+        return dto;
+    }
+
+    @Override
+    public Articulo actualizarBasico(String codigo, ArticuloUpdateDTO body) {
+        Articulo a = articuloRepository.findById(codigo)
+                .orElseThrow(() -> new RuntimeException("Artículo no encontrado: " + codigo));
+
+        a.setNombre(body.getNombre().trim());
+        a.setUnidadMedida(body.getUnidadMedida().trim());
+
+        return articuloRepository.save(a);
     }
 }

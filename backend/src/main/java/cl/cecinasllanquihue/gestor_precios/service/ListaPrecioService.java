@@ -8,4 +8,6 @@ public interface ListaPrecioService {
     List<ListaPrecioDTO> obtenerListasPorSistema(Integer sistemaId);
 
     ListaPrecioDTO crearLista(ListaPrecioDTO dto);
+
+    List<ListaPrecioDTO> obtenerTodas();
 }

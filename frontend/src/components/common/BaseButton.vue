@@ -5,13 +5,19 @@
     :class="[variantClasses, disabledClasses]" @click="onClick">
 
     <!-- Icono izquierdo -->
-    <img v-if="iconLeft" :src="iconLeft" alt="" aria-hidden="true" class="h-4 w-4 shrink-0">
+    <span v-if="$slots.iconLeft" class="flex items-center text-inherit">
+      <slot name="iconLeft" />
+    </span>
+
 
     <!-- Texto -->
     <slot>{{ label }}</slot>
 
     <!-- Icono derecho -->
-    <img v-if="iconRight" :src="iconRight" alt="" aria-hidden="true" class="h-4 w-4 shrink-0" />
+    <span v-if="$slots.iconRight" class="flex items-center text-inherit">
+      <slot name="iconRight" />
+    </span>
+
   </button>
 </template>
 
@@ -21,9 +27,7 @@ import { computed } from 'vue'
 const props = defineProps({
   label: { type: String, default: 'Button' },
   disabled: { type: Boolean, default: false },
-  variant: { type: String, default: 'accept' }, // accept | danger | ghost
-  iconLeft: { type: String, default: '' },
-  iconRight: { type: String, default: '' },
+  variant: { type: String, default: 'accept' }, // accept | danger | ghost | outline
 })
 
 const emit = defineEmits(['click'])
@@ -32,6 +36,8 @@ const variantClasses = computed(() => {
   switch (props.variant) {
     case 'accept':
       return 'bg-[#34C759] text-white hover:bg-[#2FAF4F] focus-visible:ring-[#34C759]'
+    case 'secondary':
+      return 'bg-[#B8B8B8] text-white hover:bg-[#A6A6A6] active:bg-[#8F8F8F] focus-visible:ring-[#B8B8B8]'
     case 'danger':
       return 'bg-[#DC2626] text-white hover:bg-[#B91C1C] focus-visible:ring-[#DC2626]'
     case 'ghost':
