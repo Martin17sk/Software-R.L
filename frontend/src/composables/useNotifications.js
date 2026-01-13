@@ -1,9 +1,10 @@
 import { ref } from "vue";
+import {v4 as uuidv4 } from 'uuid'
 
 const toasts = ref([])
 
 function pushToast({ type = 'info', message = '', timeout = 3000 } = {}) {
-    const id = crypto.randomUUID()
+    const id = uuidv4()
     toasts.value.push({ id, type, message })
 
     window.setTimeout(() => {

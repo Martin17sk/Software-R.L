@@ -15,6 +15,8 @@ import { useRegisterPrice } from '../composables/useRegisterPrice';
 import { useNotifications } from '@/composables/useNotifications';
 import { fetchArticuloPrecioActual, registrarCambioPrecioMultiple } from '../services/pricingApi';
 
+import { v4 as uuidv4 } from 'uuid'
+
 const { notifySuccess, notifyError } = useNotifications()
 
 const {
@@ -49,12 +51,12 @@ const variasListas = ref(false);
 const duplicatedListError = ref('');
 
 const priceRows = ref([
-  { id: crypto.randomUUID(), lista: '', precioAnterior: null, precioNuevo: '', nota: '', showNota: false, loadingPrev: false, rowError: '' },
+  { id: uuidv4(), lista: '', precioAnterior: null, precioNuevo: '', nota: '', showNota: false, loadingPrev: false, rowError: '' },
 ]);
 
 function addRow() {
   priceRows.value.push({
-    id: crypto.randomUUID(),
+    id: uuidv4(),
     lista: '',
     precioAnterior: '',
     precioNuevo: '',
@@ -194,7 +196,7 @@ async function onConfirm() {
 
     // modo multiple:
     priceRows.value = [
-      { id: crypto.randomUUID(), lista: '', precioAnterior: '', precioNuevo: '', nota: '', showNota: false }
+      { id: uuidv4(), lista: '', precioAnterior: '', precioNuevo: '', nota: '', showNota: false }
     ]
     duplicatedListError.value = ''
   } catch (e) {
