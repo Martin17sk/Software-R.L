@@ -151,3 +151,5 @@ REFERENCES [dbo].[usuario] ([usuario_id])
 GO
 ALTER TABLE [dbo].[registro_historial] CHECK CONSTRAINT [FK_regh_usuario]
 GO
+
+// {bcrypt}$2a$10$e15g5Sw.UQnGIcu.JWMIxOq36zHAKWyE8WbANTY1T6r6BCqDWUuzm
