@@ -1,0 +1,153 @@
+USE [gestion_precios]
+GO
+/****** Object:  Table [dbo].[articulo]    Script Date: 14-01-2026 10:35:22 ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [dbo].[articulo](
+	[articulo_codigo] [nvarchar](10) NOT NULL,
+	[articulo_nombre] [nvarchar](150) NOT NULL,
+	[articulo_um] [nvarchar](40) NOT NULL,
+PRIMARY KEY CLUSTERED 
+(
+	[articulo_codigo] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY]
+GO
+/****** Object:  Table [dbo].[lista_precio]    Script Date: 14-01-2026 10:35:22 ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [dbo].[lista_precio](
+	[lispre_id] [int] IDENTITY(1,1) NOT NULL,
+	[lispre_nombre] [nvarchar](100) NOT NULL,
+	[lispre_sistema_id] [int] NOT NULL,
+PRIMARY KEY CLUSTERED 
+(
+	[lispre_id] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY],
+ CONSTRAINT [UQ_lista_sistema_nombre] UNIQUE NONCLUSTERED 
+(
+	[lispre_sistema_id] ASC,
+	[lispre_nombre] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY]
+GO
+/****** Object:  Table [dbo].[parametro]    Script Date: 14-01-2026 10:35:22 ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [dbo].[parametro](
+	[param_clave] [varchar](50) NOT NULL,
+	[param_valor] [varchar](255) NOT NULL,
+PRIMARY KEY CLUSTERED 
+(
+	[param_clave] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY]
+GO
+/****** Object:  Table [dbo].[precio_actual]    Script Date: 14-01-2026 10:35:22 ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [dbo].[precio_actual](
+	[preact_articulo_codigo] [nvarchar](10) NOT NULL,
+	[preact_lispre_id] [int] NOT NULL,
+	[preact_precio] [decimal](18, 2) NOT NULL,
+ CONSTRAINT [PK_precio_actual] PRIMARY KEY CLUSTERED 
+(
+	[preact_articulo_codigo] ASC,
+	[preact_lispre_id] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY]
+GO
+/****** Object:  Table [dbo].[registro_historial]    Script Date: 14-01-2026 10:35:22 ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [dbo].[registro_historial](
+	[regh_id] [int] IDENTITY(1,1) NOT NULL,
+	[regh_fechahora] [datetime] NOT NULL,
+	[regh_usuario_id] [int] NOT NULL,
+	[regh_articulo_codigo] [nvarchar](10) NOT NULL,
+	[regh_lispre_id] [int] NOT NULL,
+	[regh_precioant] [decimal](18, 2) NOT NULL,
+	[regh_precionue] [decimal](18, 2) NOT NULL,
+	[regh_observacion] [nvarchar](255) NULL,
+PRIMARY KEY CLUSTERED 
+(
+	[regh_id] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY]
+GO
+/****** Object:  Table [dbo].[sistema]    Script Date: 14-01-2026 10:35:22 ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [dbo].[sistema](
+	[sistema_id] [int] IDENTITY(1,1) NOT NULL,
+	[sistema_nombre] [nvarchar](50) NOT NULL,
+PRIMARY KEY CLUSTERED 
+(
+	[sistema_id] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY]
+GO
+/****** Object:  Table [dbo].[usuario]    Script Date: 14-01-2026 10:35:22 ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [dbo].[usuario](
+	[usuario_id] [int] IDENTITY(1,1) NOT NULL,
+	[usuario_nombre] [nvarchar](100) NOT NULL,
+	[usuario_contrasena] [nvarchar](100) NOT NULL,
+	[activo] [bit] NOT NULL,
+PRIMARY KEY CLUSTERED 
+(
+	[usuario_id] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY]
+GO
+ALTER TABLE [dbo].[articulo] ADD  DEFAULT ('-') FOR [articulo_um]
+GO
+ALTER TABLE [dbo].[registro_historial] ADD  DEFAULT (sysdatetime()) FOR [regh_fechahora]
+GO
+ALTER TABLE [dbo].[usuario] ADD  CONSTRAINT [DF_Usuario_activo]  DEFAULT ((1)) FOR [activo]
+GO
+ALTER TABLE [dbo].[lista_precio]  WITH CHECK ADD  CONSTRAINT [FK_lista_sistema] FOREIGN KEY([lispre_sistema_id])
+REFERENCES [dbo].[sistema] ([sistema_id])
+GO
+ALTER TABLE [dbo].[lista_precio] CHECK CONSTRAINT [FK_lista_sistema]
+GO
+ALTER TABLE [dbo].[precio_actual]  WITH CHECK ADD  CONSTRAINT [FK_preact_articulo] FOREIGN KEY([preact_articulo_codigo])
+REFERENCES [dbo].[articulo] ([articulo_codigo])
+GO
+ALTER TABLE [dbo].[precio_actual] CHECK CONSTRAINT [FK_preact_articulo]
+GO
+ALTER TABLE [dbo].[precio_actual]  WITH CHECK ADD  CONSTRAINT [FK_preact_lista] FOREIGN KEY([preact_lispre_id])
+REFERENCES [dbo].[lista_precio] ([lispre_id])
+GO
+ALTER TABLE [dbo].[precio_actual] CHECK CONSTRAINT [FK_preact_lista]
+GO
+ALTER TABLE [dbo].[registro_historial]  WITH CHECK ADD  CONSTRAINT [FK_regh_articulo] FOREIGN KEY([regh_articulo_codigo])
+REFERENCES [dbo].[articulo] ([articulo_codigo])
+GO
+ALTER TABLE [dbo].[registro_historial] CHECK CONSTRAINT [FK_regh_articulo]
+GO
+ALTER TABLE [dbo].[registro_historial]  WITH CHECK ADD  CONSTRAINT [FK_regh_lista] FOREIGN KEY([regh_lispre_id])
+REFERENCES [dbo].[lista_precio] ([lispre_id])
+GO
+ALTER TABLE [dbo].[registro_historial] CHECK CONSTRAINT [FK_regh_lista]
+GO
+ALTER TABLE [dbo].[registro_historial]  WITH CHECK ADD  CONSTRAINT [FK_regh_usuario] FOREIGN KEY([regh_usuario_id])
+REFERENCES [dbo].[usuario] ([usuario_id])
+GO
+ALTER TABLE [dbo].[registro_historial] CHECK CONSTRAINT [FK_regh_usuario]
+GO
